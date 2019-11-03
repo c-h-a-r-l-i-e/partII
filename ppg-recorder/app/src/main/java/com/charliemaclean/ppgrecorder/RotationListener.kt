@@ -1,33 +1,30 @@
-package com.example.ppgrecorder
+package com.charliemaclean.ppgrecorder
 
-import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
 import java.io.File
 import com.opencsv.CSVWriter
 import java.util.*
 
-class PpgListener : SensorEventListener {
-    private var recording : ArrayList<Pair<Long, Float>> = arrayListOf()
+class RotationListener : SensorListener {
+    private var recording : ArrayList<Pair<Long, Triple<Float,Float,Float>>> = arrayListOf()
     override fun onAccuracyChanged(sensor: Sensor, value: Int) {
     }
 
     override fun onSensorChanged(event: SensorEvent) {
-        recording.add(Pair(System.currentTimeMillis(), event.values[0]))
+        recording.add(Pair(System.currentTimeMillis(), Triple(event.values[0],event.values[1],event.values[2])))
     }
 
     // TODO: finish documentation
     /**
      * Save the PPG recording as [filename] in the directory of the app given by [context]
-     * The data is stored as a csv,
      */
-    fun save(filename: String, context: Context) {
+    override fun save(directory: File) {
         // Find a filename that doesn't already exist
-        var file = File(context.getExternalFilesDir(null), "$filename.csv")
+        var file = File(directory, "rotation.csv")
         var i = 0
         while (file.exists()) {
-            file = File(context.getExternalFilesDir(null), "$filename($i).csv")
+            file = File(directory, "rotation($i).csv")
             i++
         }
         val csvWriter = CSVWriter(file.writer())
