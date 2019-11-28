@@ -7,6 +7,7 @@ import numpy as np
 import csv
 import sys
 import ast
+import WatchData
 
 def plotPPG(foldername):
     x = []
@@ -24,6 +25,8 @@ def plotPPG(foldername):
             x.append((int(row[0])-startTime) / 1000)
             y.append(float(row[1]))
 
+
+
     plt.plot(x,y, label="PPG Readings")
     plt.xlabel("Time (s)")
     plt.ylabel("PPG Reading")
@@ -32,10 +35,22 @@ def plotPPG(foldername):
 
 
 def plotAcceleration(foldername):
-    t = []
-    x = []
-    y = []
-    z = []
+    wd = WatchData.WatchData(foldername)
+    accel = wd.getAcceleration()
+    t = accel['time']
+    x = accel['x']
+    y = accel['y']
+    z = accel['z']
+    plt.plot(t, x, label="x")
+    plt.plot(t, y, label="y")
+    plt.plot(t, z, label="z")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Acceleration")
+
+    plt.title("Plot of accelerometer sensors")
+    plt.legend()
+
+"""        
     with open("{}/accelerometer.csv".format(foldername), 'r') as csvfile:
         plots = csv.reader(csvfile, delimiter=',')
         starting = True
@@ -51,15 +66,7 @@ def plotAcceleration(foldername):
             x.append(accelerationData[0])
             y.append(accelerationData[1])
             z.append(accelerationData[2])
-    plt.plot(t, x, label="x")
-    plt.plot(t, y, label="y")
-    plt.plot(t, z, label="z")
-    plt.xlabel("Time (s)")
-    plt.ylabel("Acceleration")
-    plt.title("Plot of accelerometer sensors")
-    plt.legend()
-
-            
+"""
 def plotRotation(foldername):
     t = []
     x = []
@@ -147,7 +154,11 @@ if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("Usage: graph.py foldername")
     else:
+
         folder = sys.argv[1]
+        plotAcceleration(folder)
+        plt.show()
+
         plt.subplot(2,2,1)
         plotPPG(folder)
         plt.subplot(2,2,2)
@@ -157,6 +168,8 @@ if __name__ == "__main__":
         plt.subplot(2,2,4)
         plotRotation(folder)
 
+        plt.show()
+        plotAcceleration(folder)
         plt.show()
 
         #plotPPGAtZero("files/recording_2019-11-07T14:30:12.018_trimmed/", label="Resting")

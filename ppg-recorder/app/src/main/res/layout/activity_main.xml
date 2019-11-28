@@ -36,9 +36,10 @@
             android:layout_width="146dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:background="@color/green"
+            android:background="@color/light_grey"
             android:onClick="onStartStopClick"
             android:text="@string/start"
+            android:textColor="@color/black"
             android:textSize="30sp" />
     </LinearLayout>
 

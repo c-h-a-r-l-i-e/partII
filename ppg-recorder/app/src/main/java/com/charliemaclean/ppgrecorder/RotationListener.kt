@@ -12,12 +12,12 @@ class RotationListener : SensorListener {
     }
 
     override fun onSensorChanged(event: SensorEvent) {
-        recording.add(Pair(System.currentTimeMillis(), Triple(event.values[0],event.values[1],event.values[2])))
+        recording.add(Pair(System.currentTimeMillis(),
+            Triple(event.values[0],event.values[1],event.values[2])))
     }
 
-    // TODO: finish documentation
     /**
-     * Save the PPG recording as [filename] in the directory of the app given by [context]
+     * Save the PPG recording as ppg.csv in [directory].
      */
     override fun save(directory: File) {
         // Find a filename that doesn't already exist
@@ -27,11 +27,21 @@ class RotationListener : SensorListener {
             file = File(directory, "rotation($i).csv")
             i++
         }
-        val csvWriter = CSVWriter(file.writer())
+        val csvWriter = CSVWriter(file.writer(),
+            CSVWriter.DEFAULT_SEPARATOR,
+            CSVWriter.NO_QUOTE_CHARACTER,
+            CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+            CSVWriter.DEFAULT_LINE_END)
 
-        // For each recorded PPG value, write a pair (time, value) to the CSV.
+        // Write a header to the CSV
+        csvWriter.writeNext(arrayOf("time", "x", "y", "z"))
+
+        // For each recorded PPG value, write 'time, x, y, z' to the CSV.
         recording.iterator().forEach {
-            val entry = arrayOf(it.first.toString(), it.second.toString())
+            val rotation = it.second
+            val entry = arrayOf(it.first.toString(), rotation.first.toString(),
+                rotation.second.toString(), rotation.third.toString())
+
             csvWriter.writeNext(entry)
         }
         csvWriter.close()

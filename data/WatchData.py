@@ -13,16 +13,15 @@ class WatchData:
             raise IOError("Directory {} does not exist".format(directory))
         self.directory = directory
         
-
     def getPPG(self):
         df = pandas.read_csv(os.path.join(self.directory, "ppg.csv"))
         return df
 
-    def getAccelerometer(self):
+    def getAcceleration(self):
         df = pandas.read_csv(os.path.join(self.directory, "accelerometer.csv"))
         return df
 
-    def getAccelerometer(self):
+    def getRotation(self):
         df = pandas.read_csv(os.path.join(self.directory, "rotation.csv"))
         return df
 

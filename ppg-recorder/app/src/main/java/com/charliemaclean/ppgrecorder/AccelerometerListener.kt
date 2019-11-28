@@ -30,11 +30,23 @@ class AccelerometerListener : SensorListener{
             file = File(directory, "accelerometer($i).csv")
             i++
         }
-        val csvWriter = CSVWriter(file.writer())
+        val csvWriter = CSVWriter(file.writer(),
+            CSVWriter.DEFAULT_SEPARATOR,
+            CSVWriter.NO_QUOTE_CHARACTER,
+            CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+            CSVWriter.DEFAULT_LINE_END)
 
-        // For each recorded PPG value, write a pair (time, value) to the CSV.
+        //Write header
+        csvWriter.writeNext(arrayOf("time", "x", "y", "z"))
+
+        // For each recorded accelerometer value, write (time, x, y, z) to the CSV.
         recording.iterator().forEach {
-            val entry = arrayOf(it.first.toString(), it.second.toString())
+            val acceleration = it.second
+            val entry = arrayOf(it.first.toString(),
+                acceleration.first.toString(),
+                acceleration.second.toString(),
+                acceleration.third.toString())
+
             csvWriter.writeNext(entry)
         }
         csvWriter.close()

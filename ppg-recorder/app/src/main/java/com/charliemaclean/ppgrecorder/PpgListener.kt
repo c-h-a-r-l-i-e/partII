@@ -26,7 +26,14 @@ class PpgListener : SensorListener {
             file = File(directory, "ppg($i).csv")
             i++
         }
-        val csvWriter = CSVWriter(file.writer())
+        val csvWriter = CSVWriter(file.writer(),
+            CSVWriter.DEFAULT_SEPARATOR,
+            CSVWriter.NO_QUOTE_CHARACTER,
+            CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+            CSVWriter.DEFAULT_LINE_END)
+
+        // Write header to CSV
+        csvWriter.writeNext(arrayOf("time", "value"))
 
         // For each recorded PPG value, write a pair (time, value) to the CSV.
         recording.iterator().forEach {
