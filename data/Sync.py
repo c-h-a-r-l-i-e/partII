@@ -114,6 +114,38 @@ class Sync:
         timeDiff = delta / self.getFrequency()
         return timeDiff
 
+    """
+    Returns three values (ecg,ppg,fs) containing the signals, synchronized and at frequency fs
+    """
+    def getSyncedSignals(self):
+        # Get ECG signal and frequency
+        labels = self.ecgFile.getSignalLabels()
+        pos = labels.index("ECG")
+        ecgFreq = self.ecgFile.getSampleFrequency(pos)
+        print(ecgFreq)
+        ecgSignal = self.ecgFile.readSignal(pos)
+
+        # Get PPG signal resampled at the ECG signal's rate
+        ppg = self.watchData.getPPG()
+        ppgSignal = ppg['value'].to_numpy()
+        time = ppg['time'].to_numpy()
+        ppgFreq = (time[time.size-1] - time[0]) / time.size / 2
+        ppgSignal = self.resample(ppgSignal, ppgFreq, ecgFreq)
+
+        ppgSignal = self.normalize(ppgSignal)
+        ecgSignal = self.normalize(ecgSignal)
+
+        timeDiff = self.getTimeDifference()
+        delta = int(timeDiff * ecgFreq)
+
+        # timeDiff > 0 means ecg started sooner
+        if timeDiff > 0:
+            ecgSignal = ecgSignal[delta:]
+        else:
+            ppgSignal = ppgSignal[delta:]
+        
+        return ecgSignal, ppgSignal, ecgFreq
+
 
     def plotCrossCorrelation(self):
         watchCorrelation = (self.getCrossCorrelation(watchFirst=True))
@@ -134,7 +166,6 @@ class Sync:
         plt.title("Cross-correlation moving watch acceleration")
         plt.show()
 
-
     def plotSyncedAccelerometer(self):
         delta = int(self.getTimeDifference() * self.getFrequency())
         watch = self.getWatchAccelUp()
@@ -152,46 +183,19 @@ class Sync:
         plt.ylabel("Acceleration")
         plt.title("Acceleration after syncing")
         plt.legend()
-        plt.show()
 
 
     def plotSyncedHeart(self):
-        # Get ECG signal and frequency
-        labels = self.ecgFile.getSignalLabels()
-        pos = labels.index("ECG")
-        ecgFreq = self.ecgFile.getSampleFrequency(pos)
-        print(ecgFreq)
-        ecgSignal = self.ecgFile.readSignal(pos)
+        ecg, ppg, freq = self.getSyncedSignals()
 
-        # Get PPG signal and frequency
-        ppg = self.watchData.getPPG()
-        ppgSignal = ppg['value'].to_numpy()
-        time = ppg['time'].to_numpy()
-        ppgFreq = (time[time.size-1] - time[0]) / time.size
-        print(ppgFreq)
-
-        ppgSignal = self.normalize(ppgSignal)
-        ecgSignal = self.normalize(ecgSignal)
-
-        timeDiff = self.getTimeDifference()
-
-        # timeDiff > 0 means ecg started sooner
-        if timeDiff > 0:
-            delta = int(timeDiff * ecgFreq)
-            ecgSignal = ecgSignal[delta:]
-        else:
-            delta = int(timeDiff * ppgFreq)
-            ppgSignal = ppgSignal[delta:]
-
-        xs = np.arange(0, ppgSignal.size/ppgFreq, 1/ppgFreq)
-        plt.plot(xs, ppgSignal, label="Watch PPG")
-        xs = np.arange(0, ecgSignal.size/ecgFreq, 1/ecgFreq)
-        plt.plot(xs, ecgSignal, label="ECG", color='orange')
+        xs = np.arange(0, ppg.size/freq, 1/freq)
+        plt.plot(xs, ppg, label="Watch PPG")
+        xs = np.arange(0, ecg.size/freq, 1/freq)
+        plt.plot(xs, ecg, label="ECG", color='orange')
         plt.xlabel("Time (s)")
         plt.ylabel("Value")
         plt.title("Heart-rate sensors after syncing")
         plt.legend()
-        plt.show()
 
 
 if __name__ == "__main__":
@@ -203,5 +207,7 @@ if __name__ == "__main__":
 
     sync = Sync(ecgFile, watchDirectory)
     sync.plotSyncedAccelerometer()
+    plt.show()
     sync.plotSyncedHeart()
+    plt.show()
 

@@ -16,14 +16,15 @@ def plotPPG(foldername):
         plots = csv.reader(csvfile, delimiter=',')
         starting = True
         startTime = 0
+        plots.next() # Ignore headers
         for row in plots:
             if starting:
                 starting = False
-                startTime = int(row[0])
 
-            # Use time since recording started, in seconds
-            x.append((int(row[0])-startTime) / 1000)
-            y.append(float(row[1]))
+            else:
+                # Use time since recording started, in seconds
+                x.append((int(row[0])-startTime) / 1000)
+                y.append(float(row[1]))
 
 
 
@@ -156,7 +157,7 @@ if __name__ == "__main__":
     else:
 
         folder = sys.argv[1]
-        plotAcceleration(folder)
+        plotPPG(folder)
         plt.show()
 
         plt.subplot(2,2,1)
