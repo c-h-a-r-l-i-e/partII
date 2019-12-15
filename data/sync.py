@@ -7,9 +7,10 @@ import WatchData
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy
 
 
-class Sync:
+class sync:
     """
     Initialize synchronization class, provided the EDF file from the portable ECG and the directory
     containing the data from a smart watch.
@@ -49,8 +50,12 @@ class Sync:
         return freq
 
 
+    """
+    Resample a given numpy array signal from currentFreq (hz) to newFreq (hz).
+    """
     def resample(self, signal, currentFreq, newFreq):
         resampled = np.interp(np.arange(0, signal.size, currentFreq/newFreq), np.arange(0, signal.size, 1), signal)
+
         return resampled
 
     def normalize(self, signal):
@@ -61,7 +66,8 @@ class Sync:
         return signal
 
     """
-    The two methods below return a numpy array containing acceleration along the appropriate up axis, sampled at the same rate (the ECG rate).
+    The two methods below return a numpy array containing acceleration along the appropriate up axis, sampled 
+    at the same rate (the ECG rate).
     """
     def getWatchAccelUp(self):
         watchFreq = self.getWatch_freq()
@@ -122,15 +128,25 @@ class Sync:
         labels = self.ecgFile.getSignalLabels()
         pos = labels.index("ECG")
         ecgFreq = self.ecgFile.getSampleFrequency(pos)
-        print(ecgFreq)
         ecgSignal = self.ecgFile.readSignal(pos)
 
         # Get PPG signal resampled at the ECG signal's rate
         ppg = self.watchData.getPPG()
         ppgSignal = ppg['value'].to_numpy()
         time = ppg['time'].to_numpy()
-        ppgFreq = (time[time.size-1] - time[0]) / time.size / 2
+        print("Time:")
+        print(time[time.size-1])
+        print(time[0])
+        print(time.size)
+        ppgFreq = time.size / ((time[time.size-1] - time[0]) / 1000)
+        print("ppg signal size and freq ORIGINAL:")
+        print(ppgSignal.size)
+        print(ppgFreq)
         ppgSignal = self.resample(ppgSignal, ppgFreq, ecgFreq)
+
+        print("ppg signal size and freq RESAMPLE:")
+        print(ppgSignal.size)
+        print(ecgFreq)
 
         ppgSignal = self.normalize(ppgSignal)
         ecgSignal = self.normalize(ecgSignal)
@@ -143,7 +159,7 @@ class Sync:
             ecgSignal = ecgSignal[delta:]
         else:
             ppgSignal = ppgSignal[delta:]
-        
+            
         return ecgSignal, ppgSignal, ecgFreq
 
 
@@ -205,7 +221,7 @@ if __name__ == "__main__":
     ecgFile = sys.argv[1]
     watchDirectory = sys.argv[2]
 
-    sync = Sync(ecgFile, watchDirectory)
+    sync = sync(ecgFile, watchDirectory)
     sync.plotSyncedAccelerometer()
     plt.show()
     sync.plotSyncedHeart()

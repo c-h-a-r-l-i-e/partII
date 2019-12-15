@@ -2,12 +2,12 @@ from scipy.signal import butter, lfilter
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
-import Sync
+import sync
 
-def butter_bandpass_filter(signal, lowcut, highcut, freq, order=5):
+def butter_bandpass_filter(signal, lowcut, highcut, freq, order=6):
     nyq = freq / 2
-    low = lowcut / nyq
-    high = highcut / nyq
+    low = lowcut / nyq 
+    high = highcut / nyq 
     b, a = butter(order, [low, high], btype='band')
     filtered = lfilter(b, a, signal)
     return filtered
@@ -23,37 +23,22 @@ if __name__ == "__main__":
     ecgFile = sys.argv[1]
     watchDirectory = sys.argv[2]
 
-    sync = Sync.Sync(ecgFile, watchDirectory)
+    synced = sync.sync(ecgFile, watchDirectory)
 
-    ecg, ppg, freq = sync.getSyncedSignals()
-
-    plt.xlabel("Time (s)")
-    plt.ylabel("Value")
-    plt.title("Heart-rate sensors with leather strap")
-
-    plot_signal(ppg, freq, 'blue', 'Watch PPG')
-    plt.show()
-    plot_signal(ecg, freq, 'orange', 'ECG')
-    plt.show()
-
+    ecg, ppg, freq = synced.getSyncedSignals()
 
     plt.xlabel("Time (s)")
     plt.ylabel("Value")
     plt.title("Band pass filter")
 
-    filtered = sync.normalize(butter_bandpass_filter(ppg, 30, 200, freq))
+    print(freq)
+
+    filtered = (butter_bandpass_filter(ppg, 0.5, 5, freq))
+    print(filtered)
+
 
     plot_signal(ecg, freq, 'green', 'ECG')
     plot_signal(ppg, freq, 'blue', 'Watch PPG')
     plot_signal(filtered, freq, 'orange', 'Band-pass filter')
     plt.legend()
     plt.show()
-
-
-
-
-
-
-
-
-                     
