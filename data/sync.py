@@ -134,19 +134,8 @@ class sync:
         ppg = self.watchData.getPPG()
         ppgSignal = ppg['value'].to_numpy()
         time = ppg['time'].to_numpy()
-        print("Time:")
-        print(time[time.size-1])
-        print(time[0])
-        print(time.size)
         ppgFreq = time.size / ((time[time.size-1] - time[0]) / 1000)
-        print("ppg signal size and freq ORIGINAL:")
-        print(ppgSignal.size)
-        print(ppgFreq)
         ppgSignal = self.resample(ppgSignal, ppgFreq, ecgFreq)
-
-        print("ppg signal size and freq RESAMPLE:")
-        print(ppgSignal.size)
-        print(ecgFreq)
 
         ppgSignal = self.normalize(ppgSignal)
         ecgSignal = self.normalize(ecgSignal)
@@ -161,6 +150,24 @@ class sync:
             ppgSignal = ppgSignal[delta:]
             
         return ecgSignal, ppgSignal, ecgFreq
+
+    """
+    Return the synced ppgSignal, at it's original frequency
+    """ 
+    def getSyncedPpgOriginalFreq(self):
+        ppg = self.watchData.getPPG()
+        ppgSignal = ppg['value'].to_numpy()
+        time = ppg['time'].to_numpy()
+        ppgFreq = time.size / ((time[time.size-1] - time[0]) / 1000)
+
+        timeDiff = self.getTimeDifference()
+        delta = int(timeDiff * ppgFreq)
+
+        # timeDiff < 0 means ppg started sooner
+        if timeDiff < 0:
+            ppgSignal = ppgSignal[delta:]
+            
+        return ppgSignal, ppgFreq
 
 
     def plotCrossCorrelation(self):
