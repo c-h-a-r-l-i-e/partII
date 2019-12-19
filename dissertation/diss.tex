@@ -63,17 +63,10 @@ by \texttt{detex diss.tex | tr -cd '0-9A-Za-z $\tt\backslash$n' | wc -w}
 
 \section*{Original Aims of the Project}
 
-To write a demonstration dissertation\footnote{A normal footnote without the
-complication of being in a table.} using \LaTeX\ to save
-student's time when writing their own dissertations. The dissertation
-should illustrate how to use the more common \LaTeX\ constructs. It
-should include pictures and diagrams to show how these can be
-incorporated into the dissertation.  It should contain the entire
-\LaTeX\ source of the dissertation and the makefile.  It should
-explain how to construct an MSDOS disk of the dissertation in
-Postscript format that can be used by the book shop for printing, and,
-finally, it should have the prescribed layout and format of a diploma
-dissertation.
+To research and implement the detection of heart rate from smartwatch 
+sensors. To investigate the effectiveness of a selection of filters and 
+peak finding algorithms. To use accelerometer data to find motion artifacts
+within the data, and compare methods of removing these artifacts.
 
 
 \section*{Work Completed}
@@ -117,6 +110,33 @@ appreciated.
 \pagestyle{headings}
 
 \chapter{Introduction}
+
+Elite runners have historically used heart rate to provide an accurate 
+measure of fitness, and allow them to train more effectively. [Expand on uses
+of heart rate]. Previously, Electrocardiography (ECG) chest straps have been 
+used to measure heart rate, by detecting the electrical signals controlling 
+the expansion and contraction of the heart. They are accurate devices however
+often prohibitively expensive, and hence inaccessible to casual runners.
+
+In recent years, a new technology has emerged - Photoplethysmogram (PPG) 
+- light is directed at the skin, and sensors measure how much blood vessels
+scatter it. PPG sensors are cheaper than ECG sensors, and hence are 
+available in a variety of products, particularly smartwatches. This 
+innovation has bought a new wave of advanced training and monitoring onto
+the wrists of any runner.
+
+Switching from ECG to PPG is not without flaws though - ECG sensors return a
+clean signal, as opposed to PPG signals which are contaminated with
+noise. [More details about noise]. 
+
+In particular, when running with a smartwatch, the sensor can slip across 
+the skin, resulting in a large distortion to the signal known as a motion 
+artifact (MA). Fortunately, smartwatches contain other sensors, such as 
+accelerometers and gyroscopes which can be used to predict the presence of 
+MAs, and hence compensate for them.
+
+My project is to research and develop a heart rate detection algorithm
+for smartwatches worn during running. 
 
 \section{Overview of the files}
 
