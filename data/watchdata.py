@@ -1,0 +1,68 @@
+"""
+Helper class to aid extraction of data from information downloaded from 
+the watch.
+"""
+import pandas
+import os.path
+
+def getWatchData(directory):
+    return WatchData(directory)
+
+
+class WatchData:
+    """
+    Constructor, takes directory in which data files for the recording can be
+    found.
+    """
+    def __init__(self, directory):
+        if not os.path.isdir(directory):
+            raise IOError("Directory {} does not exist".format(directory))
+        self.directory = directory
+        
+    
+    """
+    Return the PPG signal as a numpy array, along with its frequency (hz)
+    """
+    def getPPG(self):
+        df = pandas.read_csv(os.path.join(self.directory, "ppg.csv"))
+        ppg = df['value'].to_numpy()
+        time = df['time'].to_numpy()
+
+        # Calculate frequency in hz
+        freq = time.size / ((time[time.size-1] - time[0]) / 1000)
+        return ppg, freq
+
+
+    """
+    Return an acceletation signal axis (x, y or z) as a numpy array, along 
+    with its frequency (hz)
+    """
+    def getAcceleration(self, axis):
+        if not axis in ['x','y','z']:
+            raise ValueError("Argument axis must be one of x, y or z.")
+
+        df = pandas.read_csv(os.path.join(self.directory, 
+            "accelerometer.csv"))
+        signal = df[axis].to_numpy()
+        time = df['time'].to_numpy()
+
+        # Calculate frequency in hz
+        freq = time.size / ((time[time.size-1] - time[0]) / 1000)
+        return signal, freq
+
+
+    """
+    Return the rotation signal axis (x, y or z) as a numpy array, along 
+    with its frequency (hz)
+    """
+    def getRotation(self, axis):
+        if not axis in ['x','y','z']:
+            raise ValueError("Argument axis must be one of x, y or z.")
+
+        df = pandas.read_csv(os.path.join(self.directory, "rotation.csv"))
+        signal = df[axis].to_numpy()
+        time = df['time'].to_numpy()
+
+        # Calculate frequency in hz
+        freq = time.size / ((time[time.size-1] - time[0]) / 1000)
+        return signal, freq

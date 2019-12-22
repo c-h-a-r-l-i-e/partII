@@ -14,14 +14,16 @@ def butter_bandpass_filter(signal, lowcut, highcut, freq, order=4):
 
 
 def chebyshev2_filter(signal, lowcut, highcut, freq, order=2):
-    nyq = freq / 2
-    sos = cheby2(order, 50, [lowcut,highcut], btype='band', fs=freq, output='sos')
+    sos = cheby2(order, 30, [lowcut,highcut], btype='band', fs=freq, output='sos')
     filtered = sosfilt(sos, signal)
     return filtered
 
 
 def plot_signal(signal, freq, colour, label):
+    print(signal.size)
+    print(freq)
     xs = np.arange(0, signal.size/freq, 1/freq)
+    xs = xs[0:signal.size]
     plt.plot(xs, signal, color=colour, label=label)
 
 if __name__ == "__main__":

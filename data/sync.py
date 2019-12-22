@@ -3,7 +3,7 @@ Class designed to synchronize data collected from a smart watch and data collect
 ECG.
 """
 import pyedflib
-import WatchData
+import watchdata
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,7 +17,7 @@ class sync:
     """
     def __init__(self, ecgFile, watchDirectory):
         self.ecgFile = pyedflib.EdfReader(ecgFile)
-        self.watchData = WatchData.WatchData(watchDirectory)
+        self.watchData = watchdata.getWatchData(watchDirectory)
 
 
     def getECG_x(self):
@@ -30,23 +30,6 @@ class sync:
         labels = self.ecgFile.getSignalLabels()
         pos = labels.index("Accelerometer_X")
         freq = self.ecgFile.getSampleFrequency(pos)
-        return freq
-
-    def getWatch_y(self):
-        # Get a pandas dataframe
-        df = self.watchData.getAcceleration()
-        y = df['y']
-        return y
-
-    def getWatch_freq(self):
-        df = self.watchData.getAcceleration()
-        time = df['time']
-        size = len(time)
-
-        # Calculate start and end time in seconds
-        startTime = time[0] / 1000
-        endTime = time[size - 1] / 1000
-        freq = size / (endTime - startTime)
         return freq
 
 
@@ -66,15 +49,14 @@ class sync:
         return signal
 
     """
-    The two methods below return a numpy array containing acceleration along the appropriate up axis, sampled 
-    at the same rate (the ECG rate).
+    The two methods below return a numpy array containing acceleration along 
+    the appropriate up axis, sampled at the same rate (the ECG rate).
     """
     def getWatchAccelUp(self):
-        watchFreq = self.getWatch_freq()
         ecgFreq = self.getECG_freq()
-        watchY = self.getWatch_y().to_numpy()
+        watchY, watchFreq = self.watchData.getAcceleration('y')
         watchY = self.resample(watchY, watchFreq, ecgFreq)
-        watchY = -self.normalize(watchY)
+        watchY = self.normalize(watchY)
         return watchY
 
     def getECGAccelUp(self):
@@ -131,10 +113,7 @@ class sync:
         ecgSignal = self.ecgFile.readSignal(pos)
 
         # Get PPG signal resampled at the ECG signal's rate
-        ppg = self.watchData.getPPG()
-        ppgSignal = ppg['value'].to_numpy()
-        time = ppg['time'].to_numpy()
-        ppgFreq = time.size / ((time[time.size-1] - time[0]) / 1000)
+        ppgSignal, ppgFreq = self.watchData.getPPG()
         ppgSignal = self.resample(ppgSignal, ppgFreq, ecgFreq)
 
         ppgSignal = self.normalize(ppgSignal)
@@ -155,10 +134,7 @@ class sync:
     Return the synced ppgSignal, at it's original frequency
     """ 
     def getSyncedPpgOriginalFreq(self):
-        ppg = self.watchData.getPPG()
-        ppgSignal = ppg['value'].to_numpy()
-        time = ppg['time'].to_numpy()
-        ppgFreq = time.size / ((time[time.size-1] - time[0]) / 1000)
+        ppgSignal, ppgFreq = self.watchData.getPPG()
 
         timeDiff = self.getTimeDifference()
         delta = int(timeDiff * ppgFreq)
