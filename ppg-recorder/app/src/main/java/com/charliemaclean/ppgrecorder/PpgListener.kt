@@ -7,12 +7,13 @@ import com.opencsv.CSVWriter
 import java.util.*
 
 class PpgListener : SensorListener {
-    private var recording : ArrayList<Pair<Long, Float>> = arrayListOf()
+    private var recording : ArrayList<Pair<Long, Triple<Float,Float,Float>>> = arrayListOf()
     override fun onAccuracyChanged(sensor: Sensor, value: Int) {
     }
 
     override fun onSensorChanged(event : SensorEvent) {
-        recording.add(Pair(System.currentTimeMillis(), event.values[0]))
+        recording.add(Pair(System.currentTimeMillis(),
+            Triple(event.values[0],event.values[1],event.values[2])))
     }
 
     /**
@@ -33,11 +34,13 @@ class PpgListener : SensorListener {
             CSVWriter.DEFAULT_LINE_END)
 
         // Write header to CSV
-        csvWriter.writeNext(arrayOf("time", "value"))
+        csvWriter.writeNext(arrayOf("time", "value", "value2", "value3"))
 
-        // For each recorded PPG value, write a pair (time, value) to the CSV.
+        // For each recorded PPG value, write (time, value, value2, value3) to the CSV.
         recording.iterator().forEach {
-            val entry = arrayOf(it.first.toString(), it.second.toString())
+            val values = it.second
+            val entry = arrayOf(it.first.toString(), values.first.toString(),
+                values.second.toString(), values.third.toString())
             csvWriter.writeNext(entry)
         }
         csvWriter.close()
