@@ -20,8 +20,6 @@ def chebyshev2_filter(signal, lowcut, highcut, freq, order=2):
 
 
 def plot_signal(signal, freq, colour, label):
-    print(signal.size)
-    print(freq)
     xs = np.arange(0, signal.size/freq, 1/freq)
     xs = xs[0:signal.size]
     plt.plot(xs, signal, color=colour, label=label)
@@ -41,7 +39,7 @@ if __name__ == "__main__":
     lowerBPM = 100
     upperBPM = 200
     butterFiltered = synced.normalize(butter_bandpass_filter(ppgOriginal, 
-        lowerBPM/60, upperBPM/60, ppgFreq))
+        0.7, 3.5, ppgFreq))
 
     chebyFiltered = synced.normalize(chebyshev2_filter(ppgOriginal, 
         lowerBPM/60, upperBPM/60, ppgFreq))
@@ -51,7 +49,6 @@ if __name__ == "__main__":
     plt.ylabel("Value")
     plt.title("Band pass filter")
 
-    #filtered = (butter_bandpass_filter(ppg, 1, 20, freq))
 
     plot_signal(ecg, freq, 'green', 'ECG')
     plot_signal(ppg, freq, 'blue', 'Watch PPG')

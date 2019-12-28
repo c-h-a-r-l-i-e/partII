@@ -23,9 +23,10 @@ class WatchData:
     """
     Return the PPG signal as a numpy array, along with its frequency (hz)
     """
-    def getPPG(self):
+    def getPPG(self, sensor=1):
         df = pandas.read_csv(os.path.join(self.directory, "ppg.csv"))
-        ppg = df['value'].to_numpy()
+        sensor = "" if sensor==1 else str(sensor)
+        ppg = df['value'+sensor].to_numpy()
         time = df['time'].to_numpy()
 
         # Calculate frequency in hz
