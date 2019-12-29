@@ -4,6 +4,7 @@ the watch.
 """
 import pandas
 import os.path
+import data
 
 def getWatchData(directory):
     return WatchData(directory)
@@ -31,12 +32,11 @@ class WatchData:
 
         # Calculate frequency in hz
         freq = time.size / ((time[time.size-1] - time[0]) / 1000)
-        return ppg, freq
+        return data.getSignal(ppg, freq)
 
 
     """
-    Return an acceletation signal axis (x, y or z) as a numpy array, along 
-    with its frequency (hz)
+    Return an acceletation signal axis (x, y or z) as a signal object
     """
     def getAcceleration(self, axis):
         if not axis in ['x','y','z']:
@@ -49,12 +49,11 @@ class WatchData:
 
         # Calculate frequency in hz
         freq = time.size / ((time[time.size-1] - time[0]) / 1000)
-        return signal, freq
+        return data.getSignal(signal, freq)
 
 
     """
-    Return the rotation signal axis (x, y or z) as a numpy array, along 
-    with its frequency (hz)
+    Return the rotation signal axis (x, y or z) as a signal object 
     """
     def getRotation(self, axis):
         if not axis in ['x','y','z']:
@@ -66,4 +65,4 @@ class WatchData:
 
         # Calculate frequency in hz
         freq = time.size / ((time[time.size-1] - time[0]) / 1000)
-        return signal, freq
+        return data.getSignal(signal, freq)
