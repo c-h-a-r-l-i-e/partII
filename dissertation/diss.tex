@@ -148,10 +148,43 @@ In this chapter we introduce the relevant concepts for this project.
 
 ?? Do we want this ??
 
-\section{Heart Rate Detection}
 
-\subsection{Filtering}
+\section{Gathering data}
 
+
+\section{Filtering}
+
+PPGs produce a large amount of noise from various sources:
+-list sources
+
+
+In order to filter out a lot of this noise, we use filters that remove
+frequencies we know are irrelevant. We know the heartbeat can vary from 
+30 to 220 BPM, and hence we would like to disregard any noise at another
+frequency.
+% TODO: more detail/cite sources
+
+There are various different filters which have been designed for different
+uses.
+
+\subsection{Butterworth Filter}
+
+\subsection{Chebyshev Filter}
+
+\section{Peak detection}
+
+Once we have a clean signal, we need to figure out the points in the signal
+that correspond to a heart beat. In PGG, we get a signal with multiple
+features.
+%TODO: give information about these features.
+
+There are multiple approaches to finding peaks:
+
+\subsection{Local maxima}
+\subsection{Wavelet transformation}
+
+
+\section{Motion artifact reduction}
 
 \chapter{Implementation}
 
