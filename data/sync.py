@@ -11,21 +11,6 @@ import matplotlib.pyplot as plt
 import scipy
 import data
 
-class Signal:
-    def __init__(self, values, frequency):
-        self.vals = values
-        self.freq= frequency
-
-    def getValues(self):
-        return self.vals
-
-    def getFrequency(self):
-        return self.freq
-
-    def plot(self, label=""):
-        xs = np.arange(0, self.vals.size/self.freq, 1/self.freq)
-        plt.plot(xs, self.vals, label=label)
-
 
 def getSync(ecgFilePath, watchDirectoryPath):
     sync = Sync(ecgFilePath, watchDirectoryPath)
@@ -55,7 +40,8 @@ class Sync:
     Resample a given numpy array signal from currentFreq (hz) to newFreq (hz).
     """
     def resample(self, signal, currentFreq, newFreq):
-        resampled = np.interp(np.arange(0, signal.size, currentFreq/newFreq), np.arange(0, signal.size, 1), signal)
+        resampled = np.interp(np.arange(0, signal.size, currentFreq/newFreq),
+                np.arange(0, signal.size, 1), signal)
 
         return resampled
 
@@ -220,6 +206,26 @@ class Sync:
         ppg = data.getSignal(ppgSignal, ppgFreq)
             
         return ppg
+
+
+    """
+    Return the synced acceleration of the wristwatch, along parameter axis.
+    """
+    def getSyncedAcceleration(self, axis):
+        acc = self.watchData.getAcceleration(axis)
+        acc = acc.normalize()
+        accFreq = acc.getFrequency()
+        accValues = acc.getValues()
+
+        timeDiff = self.getTimeDifference()
+        delta = int(abs(timeDiff) * accFreq)
+
+        # timeDiff < 0 means ppg started sooner
+        if timeDiff < 0:
+            accValues = accValues[delta:]
+
+        synced = data.getSignal(accValues, accFreq)
+        return synced
 
 
 def plotCrossCorrelation(data):
