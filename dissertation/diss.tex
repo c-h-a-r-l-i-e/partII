@@ -156,8 +156,14 @@ In this chapter we introduce the relevant concepts for this project.
 
 PPGs produce a large amount of noise from various sources:
 \begin{itemize}
-	\item One entry in the list
-	\item Another entry in the list
+	\item Light pollution. Both DC and AC lights in the environment can
+		infiltrate the sensor, affecting the PPG signal \cite{kim15}.
+	\item Temperature. As temperature increases, so does the volume of
+		blood, which will be picked up by the PPG sensor 
+		\cite{shin16}.
+	\item Breathing. The change in pressure accosiated with respiration
+		causes variations in the flow of blood, and hence can be seen
+		by the PPG sensor \cite{allen02}.
 \end{itemize}
 
 In order to remove much of this noise, we can use filters to remove
@@ -232,6 +238,9 @@ situation, we know MAs are correlated to motion, so we can use the
 accelerometer to remove MAs. This technique is extremely useful, as it can 
 still produce good results when the MAs are at the same frequency as the heart
 beat, even if the MAs have a larger amplitude.
+
+%TODO: https://ieeexplore.ieee.org/abstract/document/7867772 this may be
+%helpful
 
 
 \begin{figure}[tbh]
