@@ -29,6 +29,20 @@ if __name__ == "__main__":
     if len(sys.argv) != 3:
         raise ValueError("Expected usage: filtering.py ecgFile watchDataDirectory")
 
+    # Testing filtering works by using two sine waves
+    xs = np.linspace(0, 30, 600, False) # 30 seconds at 20hz
+    y1 = np.sin(2*np.pi*xs) # Signal at 1 hz = 60 bpm
+    y2 = np.sin(2*np.pi*0.1*xs) # 'Noise' at 0.1 hz
+    samples = y1 + y2
+    signal = data.getSignal(samples, 20)
+
+    butterFiltered = butter_bandpass_filter(signal, 
+        0.4, 4).normalize()
+    signal.plot("Signal")
+    butterFiltered.plot("Butterworth filter")
+    plt.show()
+
+
     ecgFilePath = sys.argv[1]
     watchDirectoryPath = sys.argv[2]
 
@@ -39,7 +53,7 @@ if __name__ == "__main__":
     lowerBPM = 100
     upperBPM = 200
     butterFiltered = butter_bandpass_filter(ppg, 
-        0.7, 3.5).normalize()
+        0.4, 4).normalize()
 
     chebyFiltered = chebyshev2_filter(ppg, lowerBPM/60, 
             upperBPM/60).normalize()
@@ -51,7 +65,6 @@ if __name__ == "__main__":
     ecg.plot("ECG")
     ppg.plot("Watch PPG")
     butterFiltered.plot("Butterworth filter")
-    chebyFiltered.plot("Chebyshev filter")
 
     plt.legend()
     plt.show()

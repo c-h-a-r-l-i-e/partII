@@ -38,18 +38,24 @@ if __name__ == "__main__":
 
     ecg, ppg = synced.getSyncedSignals()
 
-    lowerBPM = 24
-    upperBPM = 240
+    lowerBPM = 40
+    upperBPM = 220
     butterFiltered = filtering.butter_bandpass_filter(
         ppg,lowerBPM/60, upperBPM/60).normalize()
 
     accelerationX = synced.getSyncedAcceleration('x')
-    motionFiltered = adaptiveFilter(butterFiltered, accelerationX)
-
     accelerationY = synced.getSyncedAcceleration('y')
-    motionFiltered = adaptiveFilter(motionFiltered, accelerationY)
-
     accelerationZ = synced.getSyncedAcceleration('z')
+
+    accelerationX = filtering.butter_bandpass_filter(
+	    accelerationX, lowerBPM/60, upperBPM/60).normalize()
+    accelerationY = filtering.butter_bandpass_filter(
+	    accelerationY, lowerBPM/60, upperBPM/60).normalize()
+    accelerationZ = filtering.butter_bandpass_filter(
+            accelerationZ, lowerBPM/60, upperBPM/60).normalize()
+
+    motionFiltered = adaptiveFilter(butterFiltered, accelerationX)
+    motionFiltered = adaptiveFilter(motionFiltered, accelerationY)
     motionFiltered = adaptiveFilter(motionFiltered, accelerationZ)
 
     ecg.plot("ECG")
