@@ -155,21 +155,55 @@ In this chapter we introduce the relevant concepts for this project.
 \section{Filtering}
 
 PPGs produce a large amount of noise from various sources:
--list sources
+\begin{itemize}
+	\item One entry in the list
+	\item Another entry in the list
+\end{itemize}
 
-
-In order to filter out a lot of this noise, we use filters that remove
+In order to remove much of this noise, we can use filters to remove
 frequencies we know are irrelevant. We know the heartbeat can vary from 
-30 to 220 BPM, and hence we would like to disregard any noise at another
-frequency.
-% TODO: more detail/cite sources
+30 to 220 beats per minute, and hence we would like to disregard any noise 
+outside of this range. In this section, I will introduce the concept of 
+filters, and describe two filters useful for PPG signals.
 
-There are various different filters which have been designed for different
-uses.
+\begin{figure}[h!]
+	\centerline{\includegraphics[width=0.8\textwidth]{figs/filter.png}}
+\caption{Diagram showing filter characteristics}
+\label{fig:filterdiag}
+\end{figure}
+
+Figure ~\ref{fig:filterdiag} displays an example filter magnitude response
+diagram. The characteristics displayed are as follows.
+
+The passband is the range of frequencies we would like to remain. In an ideal
+filter, there is no loss within the passband.
+
+Passband ripple describes the variation in amplitude \emph{within} the
+passband. An ideal filter will have no passband filter, such that all
+frequencies within the passband are permitted equally.
+
+The transition width is the frequency range between the start and stop band.
+Ideally, this is zero, such that frequencies outside of the passband are
+instantly reduced.
+
+The stopband is the range of frequencies we wish to remove. An ideal filter
+completely removes all frequencies within the stopband.
+
+The ideal filter, as described above, is impossible - and hence we have a
+variety of filters which compromise between the desirable characteristics.
+Following this, I detail two of these compromises - the Butterworth filter,
+and the Chebyshev filter.
+
 
 \subsection{Butterworth Filter}
 
+The Butterworth filter aims to minimize passband ripple, at the expense of a
+larger transition width. 
+
 \subsection{Chebyshev Filter}
+
+Chebyshev designed a filter which aimed to provide minimum transition width,
+at the cost of a larger passband ripple.
 
 \section{Peak detection}
 
@@ -185,6 +219,39 @@ There are multiple approaches to finding peaks:
 
 
 \section{Motion artifact reduction}
+
+In this section I explore methods that can be used to reduce the effect of 
+Motion Artifacts (MAs) on the PPG Signal.
+
+\subsection{Adaptive Noise Cancellation}
+
+Adaptive Noise Cancellation (ANC), as described by Widrow et al.
+\cite{Widrow75}, is a technique which allows us to remove noise from a signal,
+given we have another signal correlated to the noise in some way. In our 
+situation, we know MAs are correlated to motion, so we can use the 
+accelerometer to remove MAs. This technique is extremely useful, as it can 
+still produce good results when the MAs are at the same frequency as the heart
+beat, even if the MAs have a larger amplitude.
+
+
+\begin{figure}[tbh]
+	\centerline{\includegraphics[width=\textwidth]{figs/ANC-concept.png}}
+\caption{ANC overall flow}
+\label{epsfig}
+\end{figure}
+
+An overview of the algorithm follows. We have signal from heartbeat \(s\) that
+we want to figure out, but this is contaminated by noise from MAs \(n_0\).
+We assume the PPG sensor reading \(p\) is such that \(p=s+n_0\). Additionally,
+we have accelerometer sensor readings \(n_1\). We filter \(n_1\), producing
+signal \(y\) and subtract this from \(p\), to produce \(z=p-y\). Our aim is to
+adjust the filter, such that \(y\) is as close to \(n_0\) as possible. 
+
+The adaptive filter aims to choose a filter such that the power output 
+\(E[z^2]\) is minimized. Given \(s\) is uncorrelated with \(n_0\) and \(n_1\), and \(n_0\)
+is correlated with \(n_1\), it can be proven that minimizing the output
+power is equivilant to 
+% TODO: do this maths better
 
 \chapter{Implementation}
 
