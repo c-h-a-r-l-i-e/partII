@@ -5,6 +5,8 @@
 \usepackage{graphicx}  % allows inclusion of PDF, PNG and JPG images
 \usepackage{verbatim}
 \usepackage{pdfpages}
+\usepackage{caption}
+\usepackage{subcaption}
 
 
 \raggedbottom                           % try to avoid widows and orphans
@@ -141,13 +143,9 @@ for smartwatches worn during running.
 
 \chapter{Preparation}
 
-In this chapter we introduce the relevant concepts for this project.
-
-
-\section{Analysis of Existing Heart Rate Detection Methods}
-
-?? Do we want this ??
-
+In this chapter we introduce the relevant concepts for this project. I begin
+with a description of the challenges that come with collecting data. Then I
+move on to describing the techniques I use to actually calculate heart rate.
 
 \section{Gathering data}
 
@@ -178,8 +176,10 @@ filters, and describe two filters useful for PPG signals.
 \label{fig:filterdiag}
 \end{figure}
 
-Figure ~\ref{fig:filterdiag} displays an example filter magnitude response
-diagram. The characteristics displayed are as follows.
+Figure \ref{fig:filterdiag} displays an example filter magnitude response
+diagram. This plots the amount of gain applied to each frequency. A gain of
+zero means the signal is removed, a gain of one means the signal is unchanged.
+The characteristics displayed are as follows.
 
 The passband is the range of frequencies we would like to remain. In an ideal
 filter, there is no loss within the passband.
@@ -204,27 +204,109 @@ and the Chebyshev filter.
 \subsection{Butterworth Filter}
 
 The Butterworth filter aims to minimize passband ripple, at the expense of a
-larger transition width. 
+larger transition width. To define a Butterworth filter, multiple parameters
+are used, which I will describe further here.
+
+\begin{figure}[h]
+	\centerline{\includegraphics[width=0.8\textwidth]{figs/butter-order-comparison.png}}
+\caption{Comparison of Butterworth filter orders}
+\label{fig:butterworth-order}
+\end{figure}
+
+Order (\(N\)) controls the transition width - the higher the order, the lower
+the transition width. This is desirable - we want to keep the passband as
+large as possible, and transition quickly to the stopband. However, it comes
+at the cost of computation complexity, as higher order filters take longer to
+apply. See figure \ref{fig:butterworth-order} for a plot displaying the effect
+of different orders on a filter's response.
+
+Critical frequency gives the frequency at which we want gain to drop below
+\(1/\sqrt2\) from the passband. Hence we use this parameter to define the
+point from which we wish to cut out noise. Figure \ref{fig:butterworth-order}
+uses critical frequencies 0.4 and 4 hz, which correspond to 24 and 240 bpm, a
+reasonable heart rate range.
+
+Type describes which frequencies we cut out. There are four different
+types of Butterworth filters, as follows:
+
+\begin{itemize}
+	\item Lowpass - allow frequencies below the critical frequency.
+
+	\item Highpass - allow frequencies above the critical frequency.
+
+	\item Bandpass - combination of lowpass and highpass - given two
+		frequencies, we want the passband to be between those
+		frequencies.
+
+	\item Bandstop - given two frequencies, put the stopband between them,
+		leaving the passband outside those frequencies.
+\end{itemize}
+
+We will be using a bandpass filter, as there is low and high frequency noise
+we wish to remove.
 
 \subsection{Chebyshev Filter}
 
-Chebyshev designed a filter which aimed to provide minimum transition width,
-at the cost of a larger passband ripple.
+The Chebyshev filter aims to reduce the transition width as much as possible,
+but to do this it introduces increased ripple.
 
-\section{Peak detection}
+\begin{figure}[h]
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{figs/cheby1-rp-comparison.png}
+  \caption{Chebyshev Type 1}
+  \label{fig:cheby1rs}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{figs/cheby2-rp-comparison.png}
+  \caption{Chebyshev Type 2}
+  \label{fig:cheby2rs}
+\end{subfigure}
+\caption{Comparison of Chebyshev filter rs values}
+\label{fig:chebyrs}
+\end{figure}
 
-Once we have a clean signal, we need to figure out the points in the signal
-that correspond to a heart beat. In PGG, we get a signal with multiple
-features.
-%TODO: give information about these features.
+The filter is defined with similar parameters to a Butterworth filter - order,
+critical frequencies, and type all have very similar meanings. However,
+there are type 1 and 2 Chebyshev filters, with different aims. Additionally,
+there is a new parameter \emph{rs}. I will explain these differences here.
 
-There are multiple approaches to finding peaks:
+Type 1 Chebyshev filters introduce passband ripple, whereas type 2 Chebyshev 
+filters introduce stopband ripple. Figure \ref{fig:chebyrs} shows how these
+differences manifest in the response of a second order Chebyshev filter.
 
-\subsection{Local maxima}
-\subsection{Wavelet transformation}
+The parameter \emph{rs} is defined as the maximum ripple permitted below unity
+gain. Higher \(rs\) results in more ripple for a type 1 filter, but less
+ripple for a part 2 filter, as is demonstrated in figure \ref{fig:chebyrs}.
+Introducing more ripple is undesirable as leads to more signal distortion,
+however can be advantageous as it reduces the transition width.
+
+\section{Heart Rate Calculation}
+
+Now we have removed noise from the signal, we should have a signal 
+representing the volume of blood in veins within the arm. As the heart beats,
+it sends a wave of blood through the body, forcing more blood through these
+veins. Hence, peaks in the PPG signal correspond to heart beats. 
+
+There are multiple approaches to finding heart-rate from our filtered
+signals, and I will detail a few here.
+
+\subsection{Local Maxima}
+
+If we can find the peaks in the signal, we can count them up and divide by the
+time period we count those peaks within, giving us a heart rate. One way we
+can define peaks is as local maxima.
+
+The local maxima in a signal are defined as samples which are larger than both
+neighbouring samples. Finding local maxima is an easy problem to solve - 
+intuitively, we can create an algorithm which iterates through the samples,
+comparing each sample to it's neighbours, which has complexity \(O(n)\).
+
+\subsection{Phase vocoder}
 
 
-\section{Motion artifact reduction}
+\section{Motion Artifact Reduction}
 
 In this section I explore methods that can be used to reduce the effect of 
 Motion Artifacts (MAs) on the PPG Signal.
