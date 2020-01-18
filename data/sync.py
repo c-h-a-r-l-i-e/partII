@@ -10,6 +10,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy
 import data
+from spectrum import Periodogram
+
+def correlate(f, g):
+    """
+    Calculate cross correlation c of two numpy arrays, as defined by c[k] = sum_n (f[n+k] * g[n])
+
+    Parameters
+    ----------
+    f, g : numpy array
+        Input signals.
+
+
+    Returns
+    -------
+    c : numpy array
+        Cross correlation of f and g.
+    """
+    if f.size < g.size:
+        raise ValueError("Array f must be larger than g")
+
+    length = f.size - g.size
+
+    c = np.zeros((length))
+    for k in range(length):
+        # Vectorized solution to sum_n(f[n+k] * g[n])
+        c[k] = np.sum(f[k : k + g.size] * g)
+
+    return c
 
 
 def getSync(ecgFilePath, watchDirectoryPath):
@@ -79,6 +107,7 @@ class Sync:
 
     def getFrequency(self):
         return self.getECG_freq()
+
 
 
     """
@@ -291,6 +320,17 @@ def plotSyncedHeart_twoSensors(data):
     ecg.plot("ECG sensor")
     plt.legend()
 
+def plotSpectrum(signal):
+    signal.plot()
+    plt.show()
+    fs = signal.getFrequency()
+    vals = signal.getValues()
+
+    f, t, Sxx = scipy.signal.spectrogram(vals, fs, nfft=1000)
+    plt.pcolormesh(t, f, Sxx)
+    plt.ylabel('Frequency [Hz]')
+    plt.xlabel('Time [sec]')
+
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         raise ValueError("Expected usage: sync.py ecgFile watchDataDirectory")
@@ -301,6 +341,11 @@ if __name__ == "__main__":
     watchData = watchdata.getWatchData(watchDirectory)
 
     sync = getSync(ecgFile, watchDirectory)
+
+    plotSpectrum(sync.getSyncedPPG())
+    plt.show()
+
+
     plotSyncedAccelerometer(sync)
     plt.show()
     plotSyncedHeart_twoSensors(sync)

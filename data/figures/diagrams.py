@@ -76,6 +76,7 @@ def compareButterOrders():
     plt.legend(loc='best')
     plt.show()
 
+
 compareChebyOrder()
 compareChebyOrder(version=2)
 

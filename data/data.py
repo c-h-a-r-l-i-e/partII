@@ -18,7 +18,7 @@ class Signal:
         return self.freq
 
     def plot(self, label=""):
-        xs = np.arange(0, self.vals.size/self.freq, 1/self.freq)
+        xs = np.arange(0, self.vals.size/self.freq, 1/self.freq)[:self.size]
         plt.plot(xs, self.vals, label=label)
 
     def normalize(self):

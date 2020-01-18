@@ -54,9 +54,13 @@ if __name__ == "__main__":
     accelerationZ = filtering.butter_bandpass_filter(
             accelerationZ, lowerBPM/60, upperBPM/60).normalize()
 
-    motionFiltered = adaptiveFilter(butterFiltered, accelerationX)
-    motionFiltered = adaptiveFilter(motionFiltered, accelerationY)
-    motionFiltered = adaptiveFilter(motionFiltered, accelerationZ)
+    motionFiltered = adaptiveFilter(butterFiltered, accelerationX).normalize()
+    accelerationX.plot("accel x")
+    motionFiltered.plot("filtered")
+    plt.legend()
+    plt.show()
+    motionFiltered = adaptiveFilter(motionFiltered, accelerationY).normalize()
+    motionFiltered = adaptiveFilter(motionFiltered, accelerationZ).normalize()
 
     ecg.plot("ECG")
     motionFiltered.plot("PPG Motion Filtered")
