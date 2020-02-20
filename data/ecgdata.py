@@ -2,6 +2,8 @@ import pyedflib
 import data
 import heartpy as hp
 
+DEBUG = False
+
 def getEcgData(ecgFilePath):
     return EcgData(ecgFilePath)
 
@@ -18,7 +20,10 @@ class EcgData:
         pos = self.labels.index("Accelerometer_{}".format(axis.upper()))
         freq = self.ecgFile.getSampleFrequency(pos)
         signal = self.ecgFile.readSignal(pos)
-        ecg = signal.getSignal(signal, freq)
+        if DEBUG:
+            print("ECG data, acceleration {}. Frequency {} and signal length {}"
+                    .format(axis, freq, signal.size))
+        ecg = data.getSignal(signal, freq)
         return ecg
 
 
@@ -28,18 +33,3 @@ class EcgData:
         signal = self.ecgFile.readSignal(pos)
         ecg = data.getSignal(signal, freq)
         return ecg
-
-    # Calculate the heartrate from the ECG. Algorithm works by splitting the
-    # signal into windows (of length window seconds) and calculating the HR
-    # in each window. Returns a numpy array, of HR values.
-
-            
-
-
-
-
-
-
-
-
-

@@ -7,8 +7,11 @@ import android.hardware.SensorManager
 import android.os.Bundle
 import android.os.PowerManager
 import android.support.wearable.activity.WearableActivity
+import android.util.Log
 import android.view.View
 import android.widget.Button
+import java.io.File
+import java.net.URI
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -31,6 +34,8 @@ class MainActivity : WearableActivity() {
     // recordings/[date]/[time]
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
     private val timeFormatter = DateTimeFormatter.ofPattern("HH.mm.ss.SSS")
+
+    private val sync: Sync = Sync()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -95,7 +100,7 @@ class MainActivity : WearableActivity() {
         // Create a new directory with based on current time, then save the collected data there.
         val date: String = LocalDateTime.now().format(dateFormatter)
         val time: String = LocalDateTime.now().format(timeFormatter)
-        val directory = java.io.File(
+        val directory = File(
             applicationContext.getExternalFilesDir(null), "recordings/$date/$time"
         )
         directory.mkdirs()
@@ -147,4 +152,16 @@ class MainActivity : WearableActivity() {
             button.setBackgroundColor(Color.DKGRAY)
         }
     }
+
+
+    /**
+     * Called when sync button is pressed. Moves all the files in the recordings folder to the
+     * server.
+     */
+    fun onSyncClick(view: View) {
+        val directory = File(applicationContext.getExternalFilesDir(null), "recordings")
+        Log.d("MainActivity", "directory is directory? " + directory.absolutePath)
+        sync.syncFiles(directory)
+    }
+
 }

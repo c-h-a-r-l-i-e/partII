@@ -8,6 +8,7 @@ import ecgdata
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import scipy
 import data
 from spectrum import Periodogram
@@ -56,11 +57,11 @@ class Sync:
 
 
     def getECG_x(self):
-        signal = self.watchData.getAcceleration("x")
+        signal = self.ecgData.getAcceleration("x")
         return signal.getValues()
 
     def getECG_freq(self):
-        signal = self.watchData.getAcceleration("x")
+        signal = self.ecgData.getAcceleration("x")
         return signal.getFrequency()
 
 
@@ -167,7 +168,7 @@ class Sync:
 
         timeDiff = self.getTimeDifference()
 
-        # timeDiff > 0 means ecg started sooner
+        # timeDiff > 0 means ecg started earlier than watch
         if timeDiff > 0:
             delta = int(abs(timeDiff) * ecgFreq)
             ecgSignal = ecgSignal[delta:]
@@ -228,13 +229,40 @@ class Sync:
         timeDiff = self.getTimeDifference()
         delta = int(abs(timeDiff) * ppgFreq)
 
-        # timeDiff < 0 means ppg started sooner
+        # timeDiff < 0 means watch started sooner
         if timeDiff < 0:
             ppgSignal = ppgSignal[delta:]
 
         ppg = data.getSignal(ppgSignal, ppgFreq)
             
         return ppg
+
+
+    def getSyncedECG(self):
+        """
+        Return the synced ECG signal
+
+        Returns
+        -------
+        ecg : Signal object
+            The ECG signal, after being synced with the wristwatch
+        """
+        # Get ECG signal and frequency
+        ecg = self.ecgData.getECG()
+        ecgFreq = ecg.getFrequency()
+        ecgSignal = ecg.getValues()
+        ecgSignal = self.normalize(ecgSignal)
+
+        timeDiff = self.getTimeDifference()
+        delta = int(abs(timeDiff) * ecgFreq)
+
+        # timeDiff > 0 means ecg started sooner
+        if timeDiff > 0:
+            ecgSignal = ecgSignal[delta:]
+
+        ecg = data.getSignal(ecgSignal, ecgFreq)
+            
+        return ecg
 
 
     """
@@ -249,7 +277,7 @@ class Sync:
         timeDiff = self.getTimeDifference()
         delta = int(abs(timeDiff) * accFreq)
 
-        # timeDiff < 0 means ppg started sooner
+        # timeDiff < 0 means watch started sooner
         if timeDiff < 0:
             accValues = accValues[delta:]
 
@@ -258,8 +286,8 @@ class Sync:
 
 
 def plotCrossCorrelation(data):
-    watchCorrelation = (data.getCrossCorrelation(watchFirst=True))
-    ecgCorrelation = (data.getCrossCorrelation(watchFirst=False))
+    watchCorrelation = np.abs(data.getCrossCorrelation(watchFirst=True))
+    ecgCorrelation = np.abs(data.getCrossCorrelation(watchFirst=False))
 
     xs = np.linspace(0,120,watchCorrelation.size)
     plt.subplot(1,2,1)
@@ -279,19 +307,32 @@ def plotCrossCorrelation(data):
 def plotSyncedAccelerometer(data):
     delta = int(data.getTimeDifference() * data.getFrequency())
     watch = data.getWatchAccelUp()
-    ecg = data.getECGAccelUp()
+    ecg = -data.getECGAccelUp()
     if delta > 0:
         ecg = ecg[delta:]
     else:
         watch = watch[-delta:]
 
-    xs = np.arange(0,watch.size/data.getFrequency(),1/data.getFrequency())
+    xs = np.arange(0,watch.size/data.getFrequency(),1/data.getFrequency())[:watch.size]
     plt.plot(xs, watch, label="Watch")
-    xs = np.arange(0,ecg.size/data.getFrequency(),1/data.getFrequency())
+    xs = np.arange(0,ecg.size/data.getFrequency(),1/data.getFrequency())[:ecg.size]
     plt.plot(xs, ecg, label="ECG", color='orange')
     plt.xlabel("Time (s)")
     plt.ylabel("Acceleration")
     plt.title("Acceleration after syncing")
+    plt.legend()
+
+def plotAccelerometer(data):
+    watch = data.getWatchAccelUp()
+    ecg = -data.getECGAccelUp()
+
+    xs = np.arange(0,watch.size/data.getFrequency(),1/data.getFrequency())[:watch.size]
+    plt.plot(xs, watch, label="Watch", color="orange")
+    xs = np.arange(0,ecg.size/data.getFrequency(),1/data.getFrequency())[:ecg.size]
+    #plt.plot(xs, ecg, label="ECG", color='orange')
+    plt.xlabel("Time (s)")
+    plt.ylabel("Acceleration")
+    plt.title("Acceleration before syncing")
     plt.legend()
 
 
@@ -300,7 +341,7 @@ def plotSyncedHeart(data):
 
     plt.xlabel("time (s)")
     plt.ylabel("value")
-    plt.title("heart-rate sensors after syncing")
+    plt.title("Heart-rate sensors")
 
     ppg.plot("Watch PPG")
     ecg.plot("ECG")
@@ -310,6 +351,7 @@ def plotSyncedHeart(data):
 def plotSyncedHeart_twoSensors(data):
     ecg, ppg = data.getSyncedSignals()
     ppg2 = data.getSyncedPPG(ppgSensor=2)
+    print("PPG frequency {}".format(ppg.getFrequency()))
 
     plt.xlabel("time (s)")
     plt.ylabel("value")
@@ -321,15 +363,16 @@ def plotSyncedHeart_twoSensors(data):
     plt.legend()
 
 def plotSpectrum(signal):
-    signal.plot()
-    plt.show()
+    signal = signal.normalize()
     fs = signal.getFrequency()
     vals = signal.getValues()
 
-    f, t, Sxx = scipy.signal.spectrogram(vals, fs, nfft=1000)
-    plt.pcolormesh(t, f, Sxx)
-    plt.ylabel('Frequency [Hz]')
-    plt.xlabel('Time [sec]')
+    fig, ax = plt.subplots() 
+    f, t, Sxx = scipy.signal.spectrogram(vals, fs, nfft=400)
+    pc = ax.pcolormesh(t, f, Sxx, norm=mpl.colors.LogNorm(vmin=Sxx.min(), vmax=Sxx.max()), cmap='inferno')
+    ax.set_ylabel('Frequency [Hz]')
+    ax.set_xlabel('Time [sec]')
+    fig.colorbar(pc)
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
@@ -342,11 +385,24 @@ if __name__ == "__main__":
 
     sync = getSync(ecgFile, watchDirectory)
 
-    plotSpectrum(sync.getSyncedPPG())
+    plotSyncedHeart(sync)
     plt.show()
 
+    plotSpectrum(sync.getSyncedSignals()[1])
+    plt.show()
+
+    plotAccelerometer(sync)
+    plt.show()
 
     plotSyncedAccelerometer(sync)
     plt.show()
+    
+    plotSyncedHeart_twoSensors(sync)
+    plt.show()
+
+    plotSpectrum(sync.getSyncedSignals()[1])
+    plt.show()
+
+
     plotSyncedHeart_twoSensors(sync)
     plt.show()

@@ -8,6 +8,8 @@ import heartpy as hp
 from scipy.signal import resample
 import matplotlib.pyplot as plt
 
+PLOTTING = False
+
 # Calculate the heartrate from the ECG. Algorithm works by splitting the
 # signal into windows (of length window seconds) and calculating the HR
 # in each window. Returns a numpy array, of HR values.
@@ -29,20 +31,53 @@ def getEcgHR(signal, window):
 def getPpgHR(signal, peaks, window):
     freq = signal.getFrequency()
     vals = signal.getValues()
-    windowSize = window * freq
+    windowSize = int(window * freq)
     heartrates = np.zeros((int(vals.size // windowSize)))
 
     for i in range((int(vals.size // windowSize))):
-        # Find range
-        lower = windowSize * i
-        upper = windowSize * (i + 1)
+#        # Find range
+#        lower = windowSize * i
+#        upper = windowSize * (i + 1)
+#
+#        # Find number of peaks in that range
+#        count = np.count_nonzero((lower <= peaks) & (peaks <= upper))
+#
+#        #Calculate bpm
+#        bpm = count / window * 60
+#        heartrates[i] = bpm
+        data = vals[:windowSize]
 
-        # Find number of peaks in that range
-        count = np.count_nonzero((lower <= peaks) & (peaks <= upper))
+        filtered = hp.remove_baseline_wander(vals[:windowSize], freq)
 
-        #Calculate bpm
-        bpm = count / window * 60
-        heartrates[i] = bpm
+        try:
+            wd, m = hp.process(hp.scale_data(data), freq, bpmmax=220)
+            heartrates[i] = m["bpm"]
+            if PLOTTING:
+                hp.plotter(wd, m, title='Heart Beat Detection on Noisy Signal')
+
+        except:
+            if PLOTTING:
+                plt.figure()
+                plt.plot(data)
+                plt.title("Data before baseline")
+
+                plt.figure()
+                plt.plot(filtered)
+                plt.title("Data after baseline")
+                plt.show()
+
+            # Find range
+            lower = windowSize * i
+            upper = windowSize * (i + 1)
+
+            # Find number of peaks in that range
+            count = np.count_nonzero((lower <= peaks) & (peaks <= upper))
+
+            #Calculate bpm
+            bpm = count / window * 60
+            heartrates[i] = bpm
+
+        vals = vals[windowSize:]
 
     return heartrates
 
@@ -90,7 +125,7 @@ if __name__ == "__main__":
 
     # Run adaptive motion filters on each axis to remove motion from signals
     ppgMotionFiltered = motionfilter.adaptiveFilter(
-            ppg, accelerationX)
+            ppgFiltered, accelerationX)
     ppgMotionFiltered = motionfilter.adaptiveFilter(
             ppgMotionFiltered, accelerationY)
     ppgMotionFiltered = motionfilter.adaptiveFilter(
@@ -100,24 +135,33 @@ if __name__ == "__main__":
     # FIND the PEAKS in the signal                                          #
     #########################################################################
 
+
     ppgPeaks = peakfind.find_peaks(ppgMotionFiltered)
 
     #########################################################################
     # Calculate Heart Rate                                                  #
     #########################################################################
 
-    windowSize = 120 # windowSize gived periods over which we calculate HR (s)
+    windowSize = 10 # windowSize gived periods over which we calculate HR (s)
 
     ppgHR = getPpgHR(ppg, ppgPeaks, windowSize)
-    print(ppgHR)
 
     #########################################################################
     # Compare to ECG heart rate                                             #
     #########################################################################
 
-    ecgHR = getEcgHR(ecg, windowSize)
+    ecgHR = getEcgHR(ecg, windowSize)[:ppgHR.size]
+
+    print("PPG HRs")
+    print(ppgHR)
+
+    print("ECG HRs")
     print(ecgHR)
     
-    
+    errors = np.abs(ppgHR - ecgHR)
+    errors = errors[6:] # remove errors from start of signal
+
+    print(errors)
+    print(np.average(errors))
 
 
