@@ -7,17 +7,122 @@ import filtering
 import data
 
 def find_peaks(signal):
+    """
+    Find peaks using the naive local maxima solution
+
+    Inputs
+    ----------------------
+     - signal: 1D numpy array
+       Heartbeat signal we want to find peaks from
+
+
+    Returns
+    ----------------------
+     - out: 1D numpy array
+       The position of peaks in the data (their x positons)
+
+    """
     values = signal.getValues()
     peaks, _ = scipy.signal.find_peaks(values)
     return peaks
 
-"""
-Use continuous wavelet transformations in order to detect peaks.
-"""
-def find_peaks_cwt(signal):
-    values = signal.getValues()
-    peaks = scipy.signal.find_peaks_cwt(values, np.arange(1,20))
-    return peaks
+
+
+def moving_average(signal, window_size):
+    """
+    Calculates the moving average of signal
+
+    Inputs
+    ----------------------
+     - signal: 1D numpy array
+       The signal to take the average of
+
+     - window_size: int or float
+       Size of the window we average over in seconds
+
+    Returns
+    ---------------------
+     - out: 1D numpy array
+       The moving average of the signal
+    """
+    window = int(window_size * signal.getFrequency())
+    kernel = np.array([1/window for _ in range(window)])
+    mov_average = np.convolve(signal.getValues(), kernel, mode='valid')
+
+    # Pad the missing values with the average of the signal
+    average = np.mean(signal.getValues())
+    missing = np.array([average for _ in range(int((signal.getValues().size - mov_average.size)/2))])
+    mov_average = np.insert(mov_average, 0, missing)
+    mov_average = np.append(mov_average, missing)
+
+    return data.getSignal(mov_average, signal.getFrequency())
+    
+
+def plot_moving_average(signal, window_size=0.75):
+    mov_average = moving_average(signal, window_size)
+    signal.plot("signal")
+    mov_average.plot("average")
+    plt.show()
+
+
+def find_peaks_min_sd(signal, window_size=0.75):
+    """
+    Finds the peaks based on which set of peaks gives the least standard deviation.
+    Starts by finding positions where the signal increases above the moving average, then at each step
+    increase the moving average. The resulting peaks are the peaks which minimise the peak-peak
+    interval's standard deviation.
+
+    Inputs
+    ----------------------
+     - signal: 1D numpy array
+       Heartbeat signal we want to find peaks from
+
+
+    Returns
+    ----------------------
+     - out: 1D numpy array
+       The position of peaks in the data (their x positons)
+
+    """
+    percs = [0, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 150, 200, 300]
+    mov_ave = moving_average(signal, window_size)
+    mov_ave = mov_ave.getValues()
+    signal_vals = signal.getValues()
+
+    min_sd = np.inf
+    current_peaks = []
+
+    for perc in percs:
+        current_mov_ave = mov_ave + mov_ave * perc / 100
+
+        #Find points above current moving average 
+        x_peaks = (signal_vals > current_mov_ave).nonzero()[0]
+        y_peaks = signal_vals[x_peaks]
+        peak_edges = (np.diff(x_peaks) > 1).nonzero()[0] + 1
+
+        # find the maximum between the peak edges. 
+        peaks = []
+        for i in range(len(peak_edges) - 1):
+            ys = y_peaks[peak_edges[i]:peak_edges[i+1]].tolist()
+            if len(ys) > 0:
+                peaks.append(x_peaks[peak_edges[i] + ys.index(max(ys))])
+
+        # Calculate standard deviation of the peak peak intervals
+        intervals = np.diff(peaks) / signal.getFrequency()
+        sd = np.std(intervals)
+
+        if sd < min_sd:
+            min_sd = sd
+            current_peaks = peaks
+
+    return np.array(current_peaks)
+
+
+def plot_peaks_min_sd(signal): 
+    peaks = find_peaks_min_sd(signal)
+    signal.plot("signal")
+    plot_peaks(peaks, signal)
+    plt.show()
 
 
 def plot_peaks(peaks, signal, color="red"):
@@ -44,7 +149,6 @@ def get_rate(peaks, signal):
     rateSignal = data.getSignal(interpolated, freq)
 
     return rateSignal
-
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         raise ValueError("Expected usage: peakfind.py ecgFile",
@@ -56,11 +160,16 @@ if __name__ == "__main__":
     synced = sync.getSync(ecgFile, watchDirectory)
 
     ecg, ppg = synced.getSyncedSignals()
-
-    lowerBPM = 100
-    upperBPM = 200
+    lowerBPM = 40
+    upperBPM = 240
     butterFiltered = filtering.butter_bandpass_filter(
         ppg,lowerBPM/60, upperBPM/60).normalize()
+
+    peaks = find_peaks_min_sd(butterFiltered)
+    rate = get_rate(peaks, butterFiltered)
+    butterFiltered.plot()
+    rate.plot()
+    plt.show()
 
     butterPeaks = find_peaks(butterFiltered)
     #butterPeaksCwt = find_peaks_cwt(butterFiltered)
