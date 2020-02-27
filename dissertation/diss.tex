@@ -138,17 +138,56 @@ motion artifact (MA). Fortunately, smartwatches contain other sensors, such
 as accelerometers and gyroscopes which can be used to predict the presence of 
 MAs, and hence compensate for them.
 
-My project is to research and develop a heart rate detection algorithm
+My task is to research and develop a heart rate detection algorithm
 for smartwatches worn during running. 
 
 \chapter{Preparation}
 
-In this chapter we introduce the relevant concepts for this project. I begin
-with a description of the challenges that come with collecting data. Then I
-move on to describing the techniques I use to actually calculate heart rate.
+This chapter details the steps I took to determine how to develop my
+implementation. It first describes photoplethysmography, the method with which heart-beats are
+detected on watches. Next,
+I give an overview of the algorithms I will use to extract the heart-rate from
+the PPG signal: filters, peak-detectors and motion artefact removers. Finally, I
+outline my development methodology.
 
-\section{Gathering data}
+\section{Photoplethysmography (PPG)}
 
+To develop an algorithm to track heart-rate on wrist-watches it is first important to
+understand how watches track heart activity. PPG is a technique where light is
+used to detect the volume of blood in veins. In hospitals, this is used in
+finger pulse oximeters (Figure \ref{fig:fingerppg}) to record the heart-beat
+of patients. These work by transmitting light on one side of the finger, and
+then measuring how much light is received on the other side of the finger.
+The amount of light which permeates through the finger is related to how much
+blood is currently in the veins.
+
+
+\begin{figure}[h!]
+	\centerline{\includegraphics[width=0.3\textwidth]{figs/fingerppg.jpg}}
+	\caption{Finger pulse oximeter. Image source \cite{wiki:fingerppg}.}
+\label{fig:fingerppg}
+\end{figure}
+
+With watches, we cannot transmit light on one side, and
+receive light on the other side, as the wrist is far too large. Hence, instead
+of monitoring the absorption of light by the skin, we monitor the reflection
+of light by the skin. A light is shone into the wrist, and sensors nearby
+monitor how much is reflected back. When the wrist is full of blood, more
+light is reflected back as blood scatters lights.
+
+We know now how the signals are recorded, but we have not yet explored the
+signal that is actually received from this technique. In Figure
+\ref{fig:typicalppgsignal} we see a
+clean PPG recording. There are two peaks in the data - a sytolic peak and a
+diastolic peak. The systolic peak represents the point at which the heart has
+beat - and hence pushed blood through the body. The challenge is to find this
+peak.
+
+\begin{figure}[h!]
+	\centerline{\includegraphics[width=0.7\textwidth]{figs/typicalppgsignal.jpeg}}
+	\caption{Example PPG signal. Image and annotations from \cite{elgendi12}.}
+\label{fig:typicalppgsignal}
+\end{figure}
 
 \section{Filtering}
 
@@ -303,16 +342,34 @@ neighbouring samples. Finding local maxima is an easy problem to solve -
 intuitively, we can create an algorithm which iterates through the samples,
 comparing each sample to it's neighbours, which has complexity \(O(n)\).
 
-\subsection{Phase Vocoder}
+\subsection{Peak-Peak Standard Deviation Minimization}
 
-An alternative approach to estimating the heart rate uses the signal's Fourier
-Transform. The Fourier Transformation takes a signal, and returns it's
-constituent frequencies. We can look at this Fourier Transform, knowing one of
-the peaks is the frequency associated with the heart beating. 
+Finding the local maxima is a naive approach that doesn't adapt to any problem
+specific knowledge. For example, we know heart-rate will not climb above 220
+bpm, however the prior solution could report 300 bpm. Additionally, it might
+find multiple local peaks around a single heart-beat. 
 
-Fourier Transforms alone are not fantastic for finding heart rate, as they
-are too low resolution. However we can use a Phase Vocoder to increase the
-resolution.
+Ideally, we want to include knowledge about what a normal heart-beat looks
+like in our detection algorithm. One thing we can do is look at peak-peak
+intervals - the time that passes between heart beats. Surprisingly, this is
+normally not consistent - a healthy heart actually beats with some
+variation. However, when running it has been found that the heart beats with
+very little variation \cite{michael17}, and hence in our case we can assume that the heart
+beats regularly. The aim of this method is to use this assumption, along with
+minimum and maximum heart-rate to better detect heart-beats.
+
+The method begins by calculating an initial set of peaks, by calculating the
+rolling mean of the signal, and marking points above that mean as peaks. Then,
+we compute the standard deviation of the time between these peaks (peak-peak
+interval). Then, we iteratively increase the rolling mean and again calculate
+the peaks, along with
+the standard deviation of their intervals. The idea is every time we increase the rolling mean we 
+exclude more peaks. Then at the end, the peaks we actually select are the peaks which give a reasonable
+heart-rate (in the range 20-240 bpm), and have the smallest standard deviation.
+
+So, we have developed an algorithm that attempts to find a heart-beat with
+regular peak-peak intervals, and is within a reasonable range.
+
 
 \subsection{Kalman Filter (extension)}
 
@@ -346,10 +403,10 @@ Kalman gain is the parameter used to weight the measurements against the
 prediction. A higher gain assigns more trust to the measurements, meaning the
 filter will respond quicker, a low gain produces more smoothing.
 
-\section{Motion Artifact Reduction}
+\section{Motion Artefact Reduction}
 
-In this section I explore methods that can be used to reduce the effect of 
-Motion Artifacts (MAs) on the PPG Signal.
+In this section I explore a method which can be used to reduce the effect of 
+Motion Artefacts (MAs) on the PPG Signal.
 
 \subsection{Adaptive Noise Cancellation}
 
@@ -371,6 +428,7 @@ beat, even if the MAs have a larger amplitude.
 \label{epsfig}
 \end{figure}
 
+
 An overview of the algorithm follows. We have signal from heartbeat \(s\) that
 we want to figure out, but this is contaminated by noise from MAs \(n_0\).
 We assume the PPG sensor reading \(p\) is such that \(p=s+n_0\). Additionally,
@@ -378,11 +436,66 @@ we have accelerometer sensor readings \(n_1\). We filter \(n_1\), producing
 signal \(y\) and subtract this from \(p\), to produce \(z=p-y\). Our aim is to
 adjust the filter, such that \(y\) is as close to \(n_0\) as possible. 
 
-The adaptive filter aims to choose a filter such that the power output 
+The type of filter we adjust is known as a Finite Impulse Response (FIR)
+filter. An \(N\)th order filter is defined by \(N\) weights.
+These weights are convolved with the signal, hence filtering it.
+
+The adaptive filter aims to choose a filter such that the power of the output 
 \(E[z^2]\) is minimized. Given \(s\) is uncorrelated with \(n_0\) and \(n_1\), and \(n_0\)
-is correlated with \(n_1\), it can be proven that minimizing the output
-power is equivilant to 
-% TODO: do this maths better
+is correlated with \(n_1\), it can be proven that minimizing the output power
+is equivalent to finding \(z=s\).
+
+There are multiple algorithms which exist in order to adaptively filter a
+signal. I'll look at two, first describing the least mean squares (LMS) algorithm from
+Widrow and Hoff. LMS first initializes all of the filter weights to 0. At each
+step, it finds the gradient of the mean square output \(E(z^2)\).
+Each weight's gradient describes what would happen to the signal if we kept
+using that weight value. So if the gradient of a weight is positive we know
+that using that weight again would increase the mean squared output. Hence, at
+the end of each step we shift the weights down if the gradient is positive,
+and visa versa if the gradient is negative.
+
+LMS takes a parameter - step size \(\mu\), which scales how much we move the
+weights by. The equation used to update weights is \[w_{n+1}=w_n-\mu \nabla
+E(y^2)[n]\]
+where \(W_n\) is the \(n\)th filter weight, and \(\nabla E(y^2)[n]\) is the
+\(n\)th weight gradient.
+
+Step size must be chosen very carefully, as if it is too large there is a risk
+of LMS missing the solution as it overcompensates for the gradient. If it is
+too small, then the algorithm becomes too expensive as we need many more
+iterations. The situation is made worse as the ideal step size changes with
+respect to the power of the input, making it very difficult to choose a step
+size which gives stability.
+
+To solve these stability issues, NLMS was introduced. It is the same as LMS, except you normalize the input power each
+iteration. This makes choosing a step size which gives stability a lot easier.
+
+So now we have a stable adaptive filter, which will allow us to tune a filter
+that will remove motion noise from our PPG signal.
+
+
+\section{Development Strategy}
+
+I implemented the project in phases:
+
+\begin{enumerate}
+	\item Develop an application to collect PPG signal from watch while
+		running.
+
+	\item Collect data over the course of different runs. Import data into
+		Python, to allow analysis.
+
+	\item Implement filters in Python to remove miscellaneous noise.
+
+	\item Implement heart-rate detectors in Python to extract the
+		numerical heart-rate.
+
+	\item Implement motion-artifact reduction algorithm to cancel out
+		motion related noise.
+
+
+\end{enumerate}
 
 \chapter{Implementation}
 
@@ -482,15 +595,77 @@ later analysis. I created a server which would run on a Raspberry Pi that the
 watch could connect to over the local network. The files would be passed to
 the server, and from there the files are uploaded to Google Drive where they
 can be accessed anywhere. In this section I go over the details of this
-implementation.
+implementation. See figure \ref{fig:upload} for the overall uploading process.
+
+\begin{figure}[tbh]
+	\centerline{\includegraphics[width=\textwidth]{figs/upload.png}}
+	\caption{The overall process of uploading files.}
+	\label{fig:upload}
+\end{figure}
 
 \subsubsection{Changes to Wear OS Application}
 
-First a 'sync' button was included in the interface. 
+First a 'sync' button was included in the interface, which users can press to
+trigger the sending of files to the server.
+
+Then I added the logic to be triggered when the button is pressed. This logic
+iterates through every file in the recordings directory and performs a HTTP
+PUT request with them. I used\ldots
+
+\subsection{Raspberry Pi Access Point}
+
+To connect the watch to the server I needed to create a local access point on the
+Raspberry Pi. The
+packages I used to do this were \emph{hostapd} and \emph{dnsmasq}. 
+
+The package \emph{hostapd} is used to setup the access point, so I used it to configure
+the name you can find the network from, the password of the network and the
+channel it can be accessed on. 
+
+The package \emph{dnsmasq} is used to setup the DHCP service, assigning IP
+addresses to devices. I set it up to assign the range of adresses from 192.168.0.1 to
+192.168.0.255 on the same interface as \emph{hostapd} is broadcasting over.
 
 \subsubsection{Flask Web Application on Raspberry Pi}
 
+Now, to setup the server I used Flask, a Python Web App framework. I chose
+this over other frameworks like Django as it provides a flexible framework
+which is easy to understand and deploy.
+
+I created an application \emph{server.py} which
+accepts PUT requests containing a file from URL \emph{/upload/path} where
+\emph{path} is the location we want to place the file. Then, the server
+makes the directories up to \emph{path} if they don't exist, placing the file
+in this directory. Unlike in a normal server implementation, I do not secure
+this file upload process. I am aware there are a number of security issues
+concerned with leaving a file upload with arbitrary path options, for example
+a user might be able to upload a file in the parent direction by placing a PUT
+request for \emph{/upload/../../example}. However, I do not worry about these
+attacks as the access point is secured by \emph{hostapd} and only the watch
+will be connected.
+
+Once the file has been saved, I upload the new file to google drive, by
+calling \emph{gdrive.py}, which I detail below.
+
 \subsubsection{Python Scripts to Upload to Google Drive}
+
+To manage the process of uploading files to Google Drive, I created a new
+application \emph{gdrive.py}. To upload to Google Drive using Python, I used
+the library \emph{googleapiclient}, which was a surprisingly complicated API,
+as I will explain here.
+
+First, to connect to Google servers, the API must authenticate to ensure that
+it has permission to access a user's Drive. The service requires a credential
+token which expires periodically. Hence, I store the credentials in a binary
+file using library \emph{pickle}, and when I need to access them, I 
+refresh them if they have expired.
+
+Then, I must actually upload a file. This process is complicated as Google
+Drive does not use a path system to store files. Instead, it is a set of files
+each with a unique IDs. A folder is simply a file with a \emph{folder} file
+type, and a collection of files associated with it. Additionally, the only
+methods available in the API 
+
 
 \subsection{Synchronising Signals}
 
@@ -550,173 +725,307 @@ algorithm:
 \end{enumerate}
 
 
-\section{Verbatim text}
+\section{Filtering}
 
-Verbatim text can be included using \verb|\begin{verbatim}| and
-\verb|\end{verbatim}|. I normally use a slightly smaller font and
-often squeeze the lines a little closer together, as in:
+PPGs produce a large amount of noise from various sources:
+\begin{itemize}
+	\item Light pollution. Both DC and AC lights in the environment can
+		infiltrate the sensor, affecting the PPG signal \cite{kim15}.
+	\item Temperature. As temperature increases, so does the volume of
+		blood, which will be picked up by the PPG sensor 
+		\cite{shin16}.
+	\item Breathing. The change in pressure accosiated with respiration
+		causes variations in the flow of blood, and hence can be seen
+		by the PPG sensor \cite{allen02}.
+\end{itemize}
 
-{\renewcommand{\baselinestretch}{0.8}\small
-\begin{verbatim}
-GET "libhdr"
- 
-GLOBAL { count:200; all  }
- 
-LET try(ld, row, rd) BE TEST row=all
-                        THEN count := count + 1
-                        ELSE { LET poss = all & ~(ld | row | rd)
-                               UNTIL poss=0 DO
-                               { LET p = poss & -poss
-                                 poss := poss - p
-                                 try(ld+p << 1, row+p, rd+p >> 1)
-                               }
-                             }
-LET start() = VALOF
-{ all := 1
-  FOR i = 1 TO 12 DO
-  { count := 0
-    try(0, 0, 0)
-    writef("Number of solutions to %i2-queens is %i5*n", i, count)
-    all := 2*all + 1
-  }
-  RESULTIS 0
-}
-\end{verbatim}
-}
+In order to remove much of this noise, we can use filters to remove
+frequencies we know are irrelevant. We know the heartbeat can vary from 
+30 to 220 beats per minute, and hence we would like to disregard any noise 
+outside of this range. In this section, I will introduce the concept of 
+filters, and describe two filters useful for PPG signals.
 
-\section{Tables}
-
-\begin{samepage}
-Here is a simple example\footnote{A footnote} of a table.
-
-\begin{center}
-\begin{tabular}{l|c|r}
-Left      & Centred & Right \\
-Justified &         & Justified \\[3mm]
-%\hline\\%[-2mm]
-First     & A       & XXX \\
-Second    & AA      & XX  \\
-Last      & AAA     & X   \\
-\end{tabular}
-\end{center}
-
-\noindent
-There is another example table in the proforma.
-\end{samepage}
-
-\section{Simple diagrams}
-
-Simple diagrams can be written directly in \LaTeX.  For example, see
-figure~\ref{latexpic1} on page~\pageref{latexpic1} and see
-figure~\ref{latexpic2} on page~\pageref{latexpic2}.
-
-\begin{figure}
-\setlength{\unitlength}{1mm}
-\begin{center}
-\begin{picture}(125,100)
-\put(0,80){\framebox(50,10){AAA}}
-\put(0,60){\framebox(50,10){BBB}}
-\put(0,40){\framebox(50,10){CCC}}
-\put(0,20){\framebox(50,10){DDD}}
-\put(0,00){\framebox(50,10){EEE}}
-
-\put(75,80){\framebox(50,10){XXX}}
-\put(75,60){\framebox(50,10){YYY}}
-\put(75,40){\framebox(50,10){ZZZ}}
-
-\put(25,80){\vector(0,-1){10}}
-\put(25,60){\vector(0,-1){10}}
-\put(25,50){\vector(0,1){10}}
-\put(25,40){\vector(0,-1){10}}
-\put(25,20){\vector(0,-1){10}}
-
-\put(100,80){\vector(0,-1){10}}
-\put(100,70){\vector(0,1){10}}
-\put(100,60){\vector(0,-1){10}}
-\put(100,50){\vector(0,1){10}}
-
-\put(50,65){\vector(1,0){25}}
-\put(75,65){\vector(-1,0){25}}
-\end{picture}
-\end{center}
-\caption{A picture composed of boxes and vectors.}
-\label{latexpic1}
+\begin{figure}[h!]
+	\centerline{\includegraphics[width=0.8\textwidth]{figs/filter.png}}
+\caption{Diagram showing filter characteristics}
+\label{fig:filterdiag}
 \end{figure}
 
-\begin{figure}
-\setlength{\unitlength}{1mm}
-\begin{center}
+Figure \ref{fig:filterdiag} displays an example filter magnitude response
+diagram. This plots the amount of gain applied to each frequency. A gain of
+zero means the signal is removed, a gain of one means the signal is unchanged.
+The characteristics displayed are as follows.
 
-\begin{picture}(100,70)
-\put(47,65){\circle{10}}
-\put(45,64){abc}
+The passband is the range of frequencies we would like to remain. In an ideal
+filter, there is no loss within the passband.
 
-\put(37,45){\circle{10}}
-\put(37,51){\line(1,1){7}}
-\put(35,44){def}
+Passband ripple describes the variation in amplitude \emph{within} the
+passband. An ideal filter will have no passband filter, such that all
+frequencies within the passband are permitted equally.
 
-\put(57,25){\circle{10}}
-\put(57,31){\line(-1,3){9}}
-\put(57,31){\line(-3,2){15}}
-\put(55,24){ghi}
+The transition width is the frequency range between the start and stop band.
+Ideally, this is zero, such that frequencies outside of the passband are
+instantly reduced.
 
-\put(32,0){\framebox(10,10){A}}
-\put(52,0){\framebox(10,10){B}}
-\put(37,12){\line(0,1){26}}
-\put(37,12){\line(2,1){15}}
-\put(57,12){\line(0,2){6}}
-\end{picture}
+The stopband is the range of frequencies we wish to remove. An ideal filter
+completely removes all frequencies within the stopband.
 
-\end{center}
-\caption{A diagram composed of circles, lines and boxes.}
-\label{latexpic2}
+The ideal filter, as described above, is impossible - and hence we have a
+variety of filters which compromise between the desirable characteristics.
+Following this, I detail two of these compromises - the Butterworth filter,
+and the Chebyshev filter.
+
+
+\subsection{Butterworth Filter}
+
+The Butterworth filter aims to minimize passband ripple, at the expense of a
+larger transition width. To define a Butterworth filter, multiple parameters
+are used, which I will describe further here.
+
+\begin{figure}[h]
+	\centerline{\includegraphics[width=0.8\textwidth]{figs/butter-order-comparison.png}}
+\caption{Comparison of Butterworth filter orders}
+\label{fig:butterworth-order}
 \end{figure}
 
+Order (\(N\)) controls the transition width - the higher the order, the lower
+the transition width. This is desirable - we want to keep the passband as
+large as possible, and transition quickly to the stopband. However, it comes
+at the cost of computation complexity, as higher order filters take longer to
+apply. See figure \ref{fig:butterworth-order} for a plot displaying the effect
+of different orders on a filter's response.
 
+Critical frequency gives the frequency at which we want gain to drop below
+\(1/\sqrt2\) from the passband. Hence we use this parameter to define the
+point from which we wish to cut out noise. Figure \ref{fig:butterworth-order}
+uses critical frequencies 0.4 and 4 hz, which correspond to 24 and 240 bpm, a
+reasonable heart rate range.
 
-\section{Adding more complicated graphics}
+Type describes which frequencies we cut out. There are four different
+types of Butterworth filters, as follows:
 
-The use of \LaTeX\ format can be tedious and it is often better to use
-encapsulated postscript (EPS) or PDF to represent complicated graphics.
-Figure~\ref{epsfig} and~\ref{xfig} on page \pageref{xfig} are
-examples. The second figure was drawn using \texttt{xfig} and exported in
-{\tt.eps} format. This is my recommended way of drawing all diagrams.
+\begin{itemize}
+	\item Lowpass - allow frequencies below the critical frequency.
+
+	\item Highpass - allow frequencies above the critical frequency.
+
+	\item Bandpass - combination of lowpass and highpass - given two
+		frequencies, we want the passband to be between those
+		frequencies.
+
+	\item Bandstop - given two frequencies, put the stopband between them,
+		leaving the passband outside those frequencies.
+\end{itemize}
+
+We will be using a bandpass filter, as there is low and high frequency noise
+we wish to remove.
+
+\subsection{Chebyshev Filter}
+
+The Chebyshev filter aims to reduce the transition width as much as possible,
+but to do this it introduces increased ripple.
+
+\begin{figure}[h]
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{figs/cheby1-rp-comparison.png}
+  \caption{Chebyshev Type 1}
+  \label{fig:cheby1rs}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{figs/cheby2-rp-comparison.png}
+  \caption{Chebyshev Type 2}
+  \label{fig:cheby2rs}
+\end{subfigure}
+\caption{Comparison of Chebyshev filter rs values}
+\label{fig:chebyrs}
+\end{figure}
+
+The filter is defined with similar parameters to a Butterworth filter - order,
+critical frequencies, and type all have very similar meanings. However,
+there are type 1 and 2 Chebyshev filters, with different aims. Additionally,
+there is a new parameter \emph{rs}. I will explain these differences here.
+
+Type 1 Chebyshev filters introduce passband ripple, whereas type 2 Chebyshev 
+filters introduce stopband ripple. Figure \ref{fig:chebyrs} shows how these
+differences manifest in the response of a second order Chebyshev filter.
+
+The parameter \emph{rs} is defined as the maximum ripple permitted below unity
+gain. Higher \(rs\) results in more ripple for a type 1 filter, but less
+ripple for a part 2 filter, as is demonstrated in figure \ref{fig:chebyrs}.
+Introducing more ripple is undesirable as leads to more signal distortion,
+however can be advantageous as it reduces the transition width.
+
+\section{Motion Artefact Reduction}
+
+In this section I explore a method which can be used to reduce the effect of 
+Motion Artefacts (MAs) on the PPG Signal.
+
+\subsection{Adaptive Noise Cancellation}
+
+Adaptive Noise Cancellation (ANC), as described by Widrow et al.
+\cite{Widrow75}, is a technique which allows us to remove noise from a signal,
+given we have another signal correlated to the noise in some way. In our 
+situation, we know MAs are correlated to motion, so we can use the 
+accelerometer to remove MAs. This technique is extremely useful, as it can 
+still produce good results when the MAs are at the same frequency as the heart
+beat, even if the MAs have a larger amplitude.
+
+%TODO: https://ieeexplore.ieee.org/abstract/document/7867772 this may be
+%helpful
 
 
 \begin{figure}[tbh]
-\centerline{\includegraphics{figs/cuarms.pdf}}
-\caption{Example figure using encapsulated postscript}
+	\centerline{\includegraphics[width=\textwidth]{figs/ANC-concept.png}}
+\caption{ANC overall flow}
 \label{epsfig}
 \end{figure}
 
-\begin{figure}[tbh]
-\vspace{4in}
-\caption{Example figure where a picture can be pasted in}
-\label{pastedfig}
-\end{figure}
+
+An overview of the algorithm follows. We have signal from heartbeat \(s\) that
+we want to figure out, but this is contaminated by noise from MAs \(n_0\).
+We assume the PPG sensor reading \(p\) is such that \(p=s+n_0\). Additionally,
+we have accelerometer sensor readings \(n_1\). We filter \(n_1\), producing
+signal \(y\) and subtract this from \(p\), to produce \(z=p-y\). Our aim is to
+adjust the filter, such that \(y\) is as close to \(n_0\) as possible. 
+
+The type of filter we adjust is known as a Finite Impulse Response (FIR)
+filter. An \(N\)th order filter is defined by \(N\) weights.
+These weights are convolved with the signal, hence filtering it.
+
+The adaptive filter aims to choose a filter such that the power of the output 
+\(E[z^2]\) is minimized. Given \(s\) is uncorrelated with \(n_0\) and \(n_1\), and \(n_0\)
+is correlated with \(n_1\), it can be proven that minimizing the output power
+is equivalent to finding \(z=s\).
+
+There are multiple algorithms which exist in order to adaptively filter a
+signal. I'll look at two, first describing the least mean squares (LMS) algorithm from
+Widrow and Hoff. LMS first initializes all of the filter weights to 0. At each
+step, it finds the gradient of the mean square output \(E(z^2)\).
+Each weight's gradient describes what would happen to the signal if we kept
+using that weight value. So if the gradient of a weight is positive we know
+that using that weight again would increase the mean squared output. Hence, at
+the end of each step we shift the weights down if the gradient is positive,
+and visa versa if the gradient is negative.
+
+LMS takes a parameter - step size \(\mu\), which scales how much we move the
+weights by. The equation used to update weights is \[w_{n+1}=w_n-\mu \nabla
+E(y^2)[n]\]
+where \(W_n\) is the \(n\)th filter weight, and \(\nabla E(y^2)[n]\) is the
+\(n\)th weight gradient.
+
+Step size must be chosen very carefully, as if it is too large there is a risk
+of LMS missing the solution as it overcompensates for the gradient. If it is
+too small, then the algorithm becomes too expensive as we need many more
+iterations. The situation is made worse as the ideal step size changes with
+respect to the power of the input, making it very difficult to choose a step
+size which gives stability.
+
+To solve these stability issues, NLMS was introduced. It is the same as LMS, except you normalize the input power each
+iteration. This makes choosing a step size which gives stability a lot easier.
+
+So now we have a stable adaptive filter, which will allow us to tune a filter
+that will remove motion noise from our PPG signal.
+
+\section{Heart Rate Calculation}
+
+Now we have removed noise from the signal, we should have a signal 
+representing the volume of blood in veins within the arm. As the heart beats,
+it sends a wave of blood through the body, forcing more blood through these
+veins. Hence, peaks in the PPG signal correspond to heart beats. 
+
+There are multiple approaches to finding heart-rate from our filtered
+signals, and I will detail a few here.
+
+\subsection{Local Maxima}
+
+If we can find the peaks in the signal, we can count them up and divide by the
+time period we count those peaks within, giving us a heart rate. One way we
+can define peaks is as local maxima.
+
+The local maxima in a signal are defined as samples which are larger than both
+neighbouring samples. Finding local maxima is an easy problem to solve - 
+intuitively, we can create an algorithm which iterates through the samples,
+comparing each sample to it's neighbours, which has complexity \(O(n)\).
+
+\subsection{Peak-Peak Standard Deviation Minimization}
+
+Finding the local maxima is a naive approach that doesn't adapt to any problem
+specific knowledge. For example, we know heart-rate will not climb above 220
+bpm, however the prior solution could report 300 bpm. Additionally, it might
+find multiple local peaks around a single heart-beat. 
+
+Ideally, we want to include knowledge about what a normal heart-beat looks
+like in our detection algorithm. One thing we can do is look at peak-peak
+intervals - the time that passes between heart beats. Surprisingly, this is
+normally not consistent - a healthy heart actually beats with some
+variation. However, when running it has been found that the heart beats with
+very little variation \cite{michael17}, and hence in our case we can assume that the heart
+beats regularly. The aim of this method is to use this assumption, along with
+minimum and maximum heart-rate to better detect heart-beats.
+
+The method begins by calculating an initial set of peaks, by calculating the
+rolling mean of the signal, and marking points above that mean as peaks. Then,
+we compute the standard deviation of the time between these peaks (peak-peak
+interval). Then, we iteratively increase the rolling mean and again calculate
+the peaks, along with
+the standard deviation of their intervals. The idea is every time we increase the rolling mean we 
+exclude more peaks. Then at the end, the peaks we actually select are the peaks which give a reasonable
+heart-rate (in the range 20-240 bpm), and have the smallest standard deviation.
+
+So, we have developed an algorithm that attempts to find a heart-beat with
+regular peak-peak intervals, and is within a reasonable range.
 
 
-\begin{figure}[tbh]
-\centerline{\includegraphics{figs/diagram.pdf}}
-\caption{Example diagram drawn using \texttt{xfig}}
-\label{xfig}
-\end{figure}
 
+\section{Post Processing}
+
+\subsection{Kalman Filter}
+
+So far, we have not considered previous heart-rate readings when considering
+the current calculation. This is naive, as heart-rate over the course of a run
+follows a very fixed pattern. 
+
+Figure    shows heart-rate over a steady run. It is clear initially heart-rate
+ramps up until it reaches a 'steady-state'. From here on the heart-rate
+remains pretty constant, not responding to slight changes in exertion.
+Finally, the heart-rate decreases rapidly once the run has completed.
+
+The Kalman filter is an algorithm which can compensate for noisy and
+inaccurate measurements such as what we get from the PPG signal. It consists
+of two phases:
+\begin{enumerate}
+	\item Prediction step - predict the current heart rate based on the
+		previous heart rate, and some model. In this step we can
+		incorporate the accelerometer as a reasonable estimator for
+		the change in running effort.
+
+	\item Update step - take the actual reading from the PPG signal and combine
+		with the output of the prediction step.
+\end{enumerate}
+
+The Kalman filter relies on modelling current heart-rate as a Gaussian
+distribution with it's standard deviation representing the certainty of the
+current estimate.
+
+Kalman gain is the parameter used to weight the measurements against the
+prediction. A higher gain assigns more trust to the measurements, meaning the
+filter will respond quicker, a low gain produces more smoothing.
 
 \chapter{Evaluation}
 
-\section{Printing and binding}
+\section{Gathering Data}
 
-Use a ``duplex'' laser printer that can print on both sides to print
-two copies of your dissertation. Then bind them, for example using the
-comb binder in the Computer Laboratory Library.
+\subsection{Synchronising Signals}
 
-\section{Further information}
+\section{Filtering}
 
-See the Unix Tools notes at
+\section{Motion Artefact Reduction}
 
-\url{http://www.cl.cam.ac.uk/teaching/current-1/UnixTools/materials.html}
+\section{Heart Rate Calculation}
 
+\section{Post Processing}
 
 \chapter{Conclusion}
 
