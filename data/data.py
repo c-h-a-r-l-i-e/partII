@@ -5,10 +5,9 @@ def getSignal(values, frequency):
     return Signal(values, frequency)
 
 
-class Signal:
+class Signal():
     def __init__(self, values, frequency):
         self.vals = values
-        self.size = values.size
         self.freq = frequency
 
     def getValues(self):
@@ -45,3 +44,16 @@ class Signal:
         values = self.getValues()[:length]
         newSignal = getSignal(values, self.freq)
         return newSignal
+
+    def __getitem__(self, key):
+        return getSignal(self.vals[key], self.freq)
+
+    def __setitem__(self, key, item):
+        self.vals[key] = item
+
+    def __delitem__(self, key):
+        self.vals.__delitem__(key)
+
+    @property
+    def size(self):
+        return self.vals.size

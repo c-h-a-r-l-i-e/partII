@@ -22,11 +22,14 @@ def correlate(f, g):
     f, g : numpy array
         Input signals.
 
-
     Returns
     -------
-    c : numpy array
-        Cross correlation of f and g.
+    k : int
+        k is the time at which we think the signals are synced, given in terms of the number of samples through f we are.
+        i.e. the value of k which maximizes c[k]
+
+    v : float
+        the value of cross correlation at that point (c[k])
     """
     if f.size < g.size:
         raise ValueError("Array f must be larger than g")
@@ -38,7 +41,84 @@ def correlate(f, g):
         # Vectorized solution to sum_n(f[n+k] * g[n])
         c[k] = np.sum(f[k : k + g.size] * g)
 
-    return c
+    k = np.argmax(c)
+    v = c[k]
+
+    return (k, v)
+
+def fastCorrelate(f, g, freq, initTimeGap = 0.25, searchBound = 3):
+    """
+    Calculate cross correlation c of two numpy arrays, as defined by c[k] = sum_n (f[n+k] * g[n])
+    using optimized method which does an initial correlation at a lower resolution and then hones in on the solution.
+
+    Parameters
+    ----------
+    f, g : numpy arrays
+        Input signals.
+
+    freq : float
+        The frequency of the signals.
+
+    initTimeGap : float
+        Interval at which to perform correlation intially in seconds. 
+
+    searchBound : float
+        Bound wihtin which we search for the solution once we have made an initial pass.
+        
+
+    Returns
+    -------
+    k : int
+        k is the time at which we think the signals are synced, given in terms of the number of samples through f we are.
+        i.e. the value of k which maximizes c[k]
+
+    v : float
+        the value of cross correlation at that point (c[k])
+    """
+    if f.size < g.size:
+        raise ValueError("Array f must be larger than g")
+
+    length = f.size - g.size
+
+    gap = int(initTimeGap * freq)
+
+    c = np.zeros((length))
+    for k in range(0, length, gap):
+        c[k] = np.sum(f[k : k + g.size] * g)
+
+    maxPos = np.argmax(c)
+    bound = searchBound * freq
+    lowerBound = max(maxPos - bound, 0)
+    upperBound = min(maxPos + bound, length)
+    for k in range(lowerBound, upperBound, 1):
+        c[k] = np.sum(f[k : k + g.size] * g)
+
+
+    k = np.argmax(c)
+    v = c[k]
+
+    return (k, v)
+
+
+def testCorrelation():
+
+    ecgFile = "ecg-files/DATA/20200118/13-55-42.EDF"
+    watchDirectory = "files/recordings/2020-01-18/14.07.45.306/"
+
+    sync = getSync(ecgFile, watchDirectory)
+    
+    freq = sync.getECG_freq()
+
+    f = sync._getWatchAccelUp()
+
+    g = sync._getECGAccelUp()
+
+    print(correlate(f[:120*freq], g))
+
+    print(fastCorrelate(f[:120*freq], g, freq))
+
+
+
 
 
 def getSync(ecgFilePath, watchDirectoryPath):
@@ -54,7 +134,14 @@ class Sync:
     def __init__(self, ecgFile, watchDirectory):
         self.ecgData = ecgdata.getEcgData(ecgFile)
         self.watchData = watchdata.getWatchData(watchDirectory)
+        self.startCrop = 120
+        self.endCrop = 30
 
+    def setStartCrop(self, crop):
+        self.startCrop = crop
+
+    def setEndCrop(self, crop):
+        self.endCrop = crop
 
     def getECG_x(self):
         signal = self.ecgData.getAcceleration("x")
@@ -63,6 +150,14 @@ class Sync:
     def getECG_freq(self):
         signal = self.ecgData.getAcceleration("x")
         return signal.getFrequency()
+
+    def getPPGLength(self):
+        """
+        Get length in seconds of PPG data
+        """
+        return self.watchData.getPPG().getValues().size / self.watchData.getPPG().getFrequency()
+        
+        
 
 
     """
@@ -75,15 +170,6 @@ class Sync:
         return resampled
 
     def normalize(self, signal):
-        if False: # TODO: pretty self explanitory
-            newsignal = signal.copy()
-            amplitude = np.absolute(newsignal).max()
-            newsignal /= amplitude
-            print("normalize doesn't loose accuracy: {}".format(np.all(signal == newsignal*amplitude)))
-
-            print(signal[0])
-            print(newsignal[0]*amplitude)
-        
         mean = np.mean(signal)
         signal -= mean
         amplitude = np.absolute(signal).max()
@@ -94,15 +180,16 @@ class Sync:
     The two methods below return a numpy array containing acceleration along 
     the appropriate up axis, sampled at the same rate (the ECG rate).
     """
-    def getWatchAccelUp(self):
+    def _getWatchAccelUp(self):
         ecgFreq = self.getECG_freq()
         watchY = self.watchData.getAcceleration('y').getValues()
         watchFreq = self.watchData.getAcceleration('y').getFrequency()
         watchY = self.resample(watchY, watchFreq, ecgFreq)
         watchY = self.normalize(watchY)
+        freq = self.watchData.getAcceleration('y').getFrequency()
         return watchY
 
-    def getECGAccelUp(self):
+    def _getECGAccelUp(self):
         ecgX = self.normalize(self.getECG_x())
         return ecgX
 
@@ -118,8 +205,8 @@ class Sync:
         - timeLimit = the time in which you expect to be able to sync data. E.g. the time in which three jumps happen.
     """
     def getCrossCorrelation(self, watchFirst=True, timeLimit=120):
-        watch = self.getWatchAccelUp()
-        ecg = self.getECGAccelUp()
+        watch = self._getWatchAccelUp()
+        ecg = self._getECGAccelUp()
         numSamples = int(timeLimit * self.getFrequency())
         if watchFirst:
             correlation = np.correlate(ecg[:numSamples*2], watch[:numSamples], mode='valid')
@@ -145,6 +232,28 @@ class Sync:
 
         timeDiff = delta / self.getFrequency()
         return timeDiff
+
+
+    def crop(self, signal):
+        """
+        Crops signal to between startCrop seconds from the start and endCrop from the end.
+
+        Parameters
+        -------------
+         - signal: data.Signal
+           The signal we want to crop 
+           
+        Returns
+        -------------
+         - out: data.Signal
+           Cropped signal
+        """
+        values = signal.getValues()
+        freq = signal.getFrequency()
+
+        values = values[int(freq*self.startCrop) : -int(freq*self.endCrop)]
+        return data.getSignal(values, freq)
+
 
 
     """
@@ -176,8 +285,8 @@ class Sync:
             delta = int(abs(timeDiff) * ppgFreq)
             ppgSignal = ppgSignal[delta:]
 
-        ecg = data.getSignal(ecgSignal, ecgFreq)
-        ppg = data.getSignal(ppgSignal, ppgFreq)
+        ecg = self.crop(data.getSignal(ecgSignal, ecgFreq))
+        ppg = self.crop(data.getSignal(ppgSignal, ppgFreq))
             
         return ecg, ppg
 
@@ -211,8 +320,8 @@ class Sync:
         else:
             ppgSignal = ppgSignal[delta:]
 
-        ecg = data.getSignal(ecgSignal, ecgFreq)
-        ppg = data.getSignal(ppgSignal, ecgFreq)
+        ecg = self.crop(data.getSignal(ecgSignal, ecgFreq))
+        ppg = self.crop(data.getSignal(ppgSignal, ecgFreq))
             
         return ecg, ppg
 
@@ -233,7 +342,7 @@ class Sync:
         if timeDiff < 0:
             ppgSignal = ppgSignal[delta:]
 
-        ppg = data.getSignal(ppgSignal, ppgFreq)
+        ppg = self.crop(data.getSignal(ppgSignal, ppgFreq))
             
         return ppg
 
@@ -260,7 +369,7 @@ class Sync:
         if timeDiff > 0:
             ecgSignal = ecgSignal[delta:]
 
-        ecg = data.getSignal(ecgSignal, ecgFreq)
+        ecg = self.crop(data.getSignal(ecgSignal, ecgFreq))
             
         return ecg
 
@@ -281,7 +390,7 @@ class Sync:
         if timeDiff < 0:
             accValues = accValues[delta:]
 
-        synced = data.getSignal(accValues, accFreq)
+        synced = self.crop(data.getSignal(accValues, accFreq))
         return synced
 
 
@@ -306,8 +415,8 @@ def plotCrossCorrelation(data):
 
 def plotSyncedAccelerometer(data):
     delta = int(data.getTimeDifference() * data.getFrequency())
-    watch = data.getWatchAccelUp()
-    ecg = -data.getECGAccelUp()
+    watch = data._getWatchAccelUp()
+    ecg = -data._getECGAccelUp()
     if delta > 0:
         ecg = ecg[delta:]
     else:
@@ -323,13 +432,13 @@ def plotSyncedAccelerometer(data):
     plt.legend()
 
 def plotAccelerometer(data):
-    watch = data.getWatchAccelUp()
-    ecg = -data.getECGAccelUp()
+    watch = data._getWatchAccelUp()
+    ecg = -data._getECGAccelUp()
 
     xs = np.arange(0,watch.size/data.getFrequency(),1/data.getFrequency())[:watch.size]
     plt.plot(xs, watch, label="Watch", color="orange")
     xs = np.arange(0,ecg.size/data.getFrequency(),1/data.getFrequency())[:ecg.size]
-    #plt.plot(xs, ecg, label="ECG", color='orange')
+    plt.plot(xs, ecg, label="ECG", color='blue')
     plt.xlabel("Time (s)")
     plt.ylabel("Acceleration")
     plt.title("Acceleration before syncing")
@@ -351,7 +460,6 @@ def plotSyncedHeart(data):
 def plotSyncedHeart_twoSensors(data):
     ecg, ppg = data.getSyncedSignals()
     ppg2 = data.getSyncedPPG(ppgSensor=2)
-    print("PPG frequency {}".format(ppg.getFrequency()))
 
     plt.xlabel("time (s)")
     plt.ylabel("value")
@@ -385,6 +493,9 @@ if __name__ == "__main__":
 
     sync = getSync(ecgFile, watchDirectory)
 
+    plotAccelerometer(sync)
+    plt.show()
+
     plotSyncedHeart(sync)
     plt.show()
 
@@ -402,7 +513,6 @@ if __name__ == "__main__":
 
     plotSpectrum(sync.getSyncedSignals()[1])
     plt.show()
-
 
     plotSyncedHeart_twoSensors(sync)
     plt.show()
