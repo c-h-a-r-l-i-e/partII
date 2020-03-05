@@ -253,7 +253,7 @@ For example, at the end of the recording in the directory
 
 I chose a simple yet functional interface to allow the user to start and stop
 a recording. The interface changes colour when recording, which makes it very
-easy to verify the recording is happening. Pictures of interface in Figure
+easy to verify the recording is happening. Pictures of interface in figure
 \ref{fig:interface}.
 
 \paragraph{Problems}
@@ -279,6 +279,26 @@ a recording is started, and released when the recording ends.
 
 \subparagraph{Sampling Rate}
 
+When I subscribe to values from the PPG sensor and accelerometer sensors, the
+API asks for a parameter - sampling period, which is the amount of delay we
+want between sensor readings being delivered. In practise, Android only uses
+this number as a hint - values may be provided at a higher or lower rate.
+
+Additionally, Android does not expose the actual rate at which sensor values
+are being provided to the OS. The sensors which are placed within devices
+always have a constant sampling rate. Sensors write to a very short buffer,
+which Android then reads from at a rate it decides. This means although we
+have a reliable sensor, Android occasionally misses readings.
+
+I record the data with a sampling period of 0 - which signifies that I want
+updates as soon as they are available. However, Android is not guaranteed to
+provide this. I mitigate this by noting the time each recordings is provided to the
+application. Then, I define sampling rate to be equal to the time difference
+between the first and last sample, divided by the number of samples.
+
+So, I have created an application which allows the user to record
+accelerometer and PPG values at a constant sampling rate, then save them to
+the watch.
 
 \subsection{Uploading Recordings}
 
@@ -355,9 +375,42 @@ refresh them if they have expired.
 Then, I must actually upload a file. This process is complicated as Google
 Drive does not use a path system to store files. Instead, it is a set of files
 each with a unique IDs. A folder is simply a file with a \emph{folder} file
-type, and a collection of files associated with it. Additionally, the only
-methods available in the API 
+type, and a collection of files associated with it. Furthermore, as files are
+not referenced by filename, it is possible to have multiple files in the same
+folder with exactly the same filename.
 
+The Google Drive API for Python only contains two methods which are useful for
+my application:
+
+\begin{itemize}
+	\item \emph{list(parent)} which lists the files within folder
+		\emph{parent}.
+
+	\item \emph{create(file, metadata)} which creates a \emph{file} with
+		\emph{metadata}. Note that as folders
+		are just files, this is also how folders are created, the
+		fact a file is a folder is specified within \emph{metadata}.
+\end{itemize}
+
+Using these methods, I define three methods within \emph{gdrive.py}, as follows:
+
+\begin{itemize}
+	\item \emph{createFolder(name, parent)} creates folder by creating a
+		file with metadata specifying the type as a folder.
+
+	\item \emph{getOrCreatePath(path)} is used to obtain a 'path' from Google
+		Drive. It works by iterating through each level of the path,
+		creating the necessary folders if they don't already exist,
+		then entering them.
+
+	\item \emph{uploadFile(filepath)} created the path up to the file
+		given by filepath, and then upload the file to the folder.
+\end{itemize}
+
+Now, I have created a system which allows the user to upload recordings from
+the watch to Google Drive via my server. And thus, I have completed the data
+recording process. The data is recorded on the Wear OS app, and then with a
+click transmitted to a Google Drive so it can be analysed.
 
 \subsection{Synchronising Signals} \label{section:sync}
 
@@ -410,12 +463,51 @@ algorithm:
 
 	\item Compute the other way - crop ECG to two minutes, PPG to four
 		minutes, compute cross correlation with \(f=\) ECG
-		acceleration, \(g=\) PPG acceleration. This is 
+		acceleration, \(g=\) PPG acceleration. I compute both ways, to
+		ensure that we can synchronise regardless of which device
+		started recording first.
 
-	\item Find the maximum cross correlation across 
+	\item Find the maximum cross correlation across each of the
+		calculations.
+
+
+
+
+
+
 
 \end{enumerate}
 
+\subsection{Informed Synchronisation}
+
+Running cross correlation on two signals is an effective way to compare their
+similarity, however it is not efficient. Cross correlation has complexity
+\(O(n^3)\). In this section I develop a new algorithm which uses knowledge of
+the problem to speed up the cross correlation calculation.
+
+By graphing the cross correlation of the acceleration signals, we can draw
+some useful features that help us to work out a more optimal solution. See
+figure \ref{fig:cross-correlation} for an example of absolute cross correlation plotted
+between the two accelerometer signals over time. It is clear that there is one
+peak which is above all the others, where the jumps line up perfectly.
+However, in addition we can see that there is a significant rise in cross
+correlation around the peak, where we are seeing peaks due to one or two of
+the jumps aligning. This is useful as we hence do not need to scan at each
+possible time difference, instead we can to a lower resolution initial scan.
+After this initial scan is done, we find the peak, and check each possible
+time difference around the lower resolution peak to find the actual peak.
+
+\begin{figure}[h!]
+	\centerline{\includegraphics[width=0.8\textwidth]{figs/cross-correlation.png}}
+	\caption{Absolute Cross Correlation over time. }
+	\label{fig:cross-correlation}
+\end{figure}
+
+The algorithm I designed takes two parameters: step size (\empg{g}) and
+correct range (\emph{r}). Step size is the resolution of the initial scan, so the
+higher it is the more likely we are to find the peak but the longer the
+algorithm takes. Correct range gives the range of the time period we want to
+scan once we have found an initial peak, in order to find the actual peak.
 
 \section{Filtering}
 
@@ -669,8 +761,6 @@ heart-rate (in the range 20-240 bpm), and have the smallest standard deviation.
 So, we have developed an algorithm that attempts to find a heart-beat with
 regular peak-peak intervals, and is within a reasonable range.
 
-
-
 \section{Post Processing}
 
 \subsection{Kalman Filter}
@@ -762,6 +852,22 @@ on the phone.
 	\caption{Retrieving Data from Headphones}
 	\label{fig:gatt-flow}
 \end{figure}
+
+\subsection{Sensor Fusion}
+
+Once I had gathered data from the earbuds, I evaluated it and found a problem,
+see section \ref{section:earbud-problem} for details. In essence, the issue I
+found was that the earbuds would lose the heartbeat signal due to the sensor
+changing position during a run. Particularly annoyingly, the earbuds report a
+heart-rate of zero whenever this happens. 
+
+To rectify this, I will implement a sensor-fusion technique. This technique
+makes use of a Kalman filter. The idea is it takes measurements from the earbuds, which
+we know are accurate, and then in periods where the heart-beat signal drops
+out we guide the output using the less accurate PPG from the wrist-watch.
+
+
+
 \chapter{Evaluation}
 
 In this chapter, I describe the steps I took in order to evaluate both
@@ -867,22 +973,26 @@ frequencies which would be considered noise (below 30 bpm and above 240 bpm).
 The results of adding this noise to a signal can be seen in figure
 \ref{fig:sim-beats-noise}.
 
-\begin{figure}[tbh]
-	\centerline{\includegraphics[width=0.6\textwidth]{figs/sim-beat.png}}
-	\caption{A single simulated beat.}
-	\label{fig:sim-beat}
-\end{figure}
-
-\begin{figure}[tbh]
-	\centerline{\includegraphics[width=1\textwidth]{figs/sim-beats.png}}
-	\caption{Multiple simulated heart-beats.}
-	\label{fig:sim-beats}
-\end{figure}
-
-\begin{figure}[tbh]
-	\centerline{\includegraphics[width=1\textwidth]{figs/sim-beats-with-noise.png}}
-	\caption{Simulated heart-beats with noise.}
-	\label{fig:sim-beats-noise}
+\begin{figure}
+	\centering
+	\begin{subfigure}[b]{0.6\textwidth}
+		\centerline{\includegraphics[width=\textwidth]{figs/sim-beat.png}}
+		\caption{A single simulated beat.}
+		\label{fig:sim-beat}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{\textwidth}
+		\centerline{\includegraphics[width=\textwidth]{figs/sim-beats.png}}
+		\caption{Multiple simulated heart-beats.}
+		\label{fig:sim-beats}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{\textwidth}
+		\centerline{\includegraphics[width=\textwidth]{figs/sim-beats-with-noise.png}}
+		\caption{Simulated heart-beats with noise.}
+		\label{fig:sim-beats-noise}
+	\end{subfigure}
+	\caption{Simulating a noisy heart-beat.}
 \end{figure}
 
 Next, I must test the speed of the algorithms. To test this, I run the filter
@@ -895,7 +1005,41 @@ parameters are optimal, in terms of both speed and validity.
 
 \subsection{Butterworth Filter}
 
-\subsection{Chebyshev Filter}
+I test the speed by running the filter 1000 times using python's
+\emph{timeit.timeit()} function, which provides the accurate time the computer
+has spent evaluating a given piece of code. I run the test on the same 35
+minute PPG I recorded on a run. 
+
+The results of the timing test can be seen in figure \ref{fig:butter-time}. As can
+be seen in the graph, execution time increases almost linearly with filter
+order. Therefore, when choosing a filter it is important to choose the lowest
+order which provides sufficient filtering, so as not to be too expensive.
+
+\begin{figure}[tbh]
+	\centerline{\includegraphics[width=0.7\textwidth]{figs/butter-time.png}}
+	\caption{The effect of Butterworth filter order on execution time.}
+	\label{fig:butter-time}
+\end{figure}
+
+\subsection{Chebyshev Type II Filter}
+
+I run the timing test again on the Chebyshev type II filter, taking the average amount
+of time taken to filter the same 35 minute segment as before. The results are
+plotted in figure \ref{fig:cheby2-time}. Firstly, there is a clear linear
+correlation between increasing filter order and increased execution time. This
+implies we should choose the lowest filter order which is feasible. Secondly,
+note that the Chebyshev filter takes over double the time as the
+Butterworth filter for each order. If there is no significant filtering
+performance improvement to using the Chebyshev filter, we should therefore use the
+Butterworth filter.
+
+
+\begin{figure}[tbh]
+	\centerline{\includegraphics[width=0.7\textwidth]{figs/cheby2-time.png}}
+	\caption{The effect of Chebyshev filter order on execution time.}
+	\label{fig:butter-time}
+\end{figure}
+
 
 \section{Motion Artefact Reduction}
 
@@ -921,16 +1065,15 @@ the noise levels as follows:
 Now, to test my motion filtering algorithm, for each PPG data segment, I run
 the algorithm on it. With the results, I calculate the heart-rate that my
 heart-rate calculate algorithm would compute. 
-I use my standard deviation minimisation algorithm from \ref{}<++>
+I use my standard deviation minimisation algorithm from \ref{}
 I then compare this to the
 ground truth which is the ECG data associated with that segment, to get an
 error number.
 
-To remove motion artefacts, I made use of adaptive filters, of which I
-implemented two varieties - Least Mean Squares (LMS) and Normalised Least Mean
+I test two of my motion filtering algorithm - Least Mean Squares (LMS) and Normalised Least Mean
 Squares (NLMS). Both of these have a parameter called step-size, so I will
 compare both of them with a variety of step sizes to determine which is
-optimal for each class of running problem.
+optimal for each class of motion noise.
 
 \subsection{LMS}
 
@@ -955,6 +1098,31 @@ Finally I compare the result of the heart-rate calculation to the actual
 heart-rate measure provided by the ECG.
 
 \section{Post Processing}
+
+\section{Earbuds}
+
+In this section, I evaluate the performance of the earbuds alone, and then
+evaluate some of the fixes I propose to issues identified in the evaluation.
+
+The first step I took when evaluating the earbuds was to go on a fast run,
+which would introduce much motion noise on the watch. You can see the
+heart-rate from the earbuds plotted against the hear-rate I received from the
+ECG in Figure \ref{}
+
+
+\subsection{Problem} \label{section:earbud-problem}
+
+The problem with the earbuds is that they occasionally lose contact with the
+ear. This can happen as a combination of sweating and motion dislodges the
+earbud. In addition, I found when running I would often have to stop and
+adjust the earbud as I suspected it was going to fall out. 
+
+The earbuds are quite sensitive to location, so if they become dislodged or
+are rotated, the reported heart-rate drops to zero. This can be seen in Figure
+\ref{}
+
+
+
 
 \chapter{Conclusion}
 
