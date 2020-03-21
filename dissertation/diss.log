@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2020.1.19)  5 MAR 2020 14:06
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2020.1.19)  5 MAR 2020 16:32
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -482,146 +482,26 @@ Package pdftex.def Info: figs/upload.png used on input line 313.
 (pdftex.def)             Requested size: 455.24411pt x 256.07507pt.
  [15 <./figs/upload.png (PNG copy)>] [16] [17]
 
-LaTeX Warning: Citation `kim15' on page 18 undefined on input line 497.
+LaTeX Warning: Reference `fig:cross-correlation' on page 18 undefined on input 
+line 490.
 
+<figs/cross-correlation.png, id=119, 852.786pt x 524.6802pt>
+File: figs/cross-correlation.png Graphic file (type png)
 
-LaTeX Warning: Citation `shin16' on page 18 undefined on input line 500.
+<use figs/cross-correlation.png>
+Package pdftex.def Info: figs/cross-correlation.png used on input line 501.
+(pdftex.def)             Requested size: 364.19667pt x 224.07094pt.
 
-
-LaTeX Warning: Citation `allen02' on page 18 undefined on input line 503.
-
-<figs/filter.png, id=119, 768.8725pt x 509.905pt>
-File: figs/filter.png Graphic file (type png)
- <use figs/filter.png>
-Package pdftex.def Info: figs/filter.png used on input line 513.
-(pdftex.def)             Requested size: 364.19667pt x 241.53825pt.
-
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
-
-
-LaTeX Warning: Reference `fig:filterdiag' on page 18 undefined on input line 51
-8.
-
-[18] <figs/butter-order-comparison.png, id=130, 605.6226pt x 377.9721pt>
-File: figs/butter-order-comparison.png Graphic file (type png)
-
-<use figs/butter-order-comparison.png>
-Package pdftex.def Info: figs/butter-order-comparison.png used on input line 55
-0.
-(pdftex.def)             Requested size: 364.19667pt x 227.30406pt.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-LaTeX Warning: Reference `fig:butterworth-order' on page 19 undefined on input 
-line 559.
-
-
-LaTeX Warning: Reference `fig:butterworth-order' on page 19 undefined on input 
-line 564.
-
-[19 <./figs/filter.png>]
-<figs/cheby1-rp-comparison.png, id=139, 462.528pt x 346.896pt>
-File: figs/cheby1-rp-comparison.png Graphic file (type png)
-
-<use figs/cheby1-rp-comparison.png>
-Package pdftex.def Info: figs/cheby1-rp-comparison.png used on input line 595.
-(pdftex.def)             Requested size: 227.62206pt x 170.71628pt.
-
-<figs/cheby2-rp-comparison.png, id=140, 462.528pt x 346.896pt>
-File: figs/cheby2-rp-comparison.png Graphic file (type png)
-
-<use figs/cheby2-rp-comparison.png>
-Package pdftex.def Info: figs/cheby2-rp-comparison.png used on input line 601.
-(pdftex.def)             Requested size: 227.62206pt x 170.71628pt.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-LaTeX Warning: Reference `fig:chebyrs' on page 20 undefined on input line 615.
-
-
-LaTeX Warning: Reference `fig:chebyrs' on page 20 undefined on input line 620.
-
-[20 <./figs/butter-order-comparison.png>]
-
-LaTeX Warning: Citation `Widrow75' on page 21 undefined on input line 632.
-
-<figs/ANC-concept.png, id=149, 963.6pt x 542.025pt>
-File: figs/ANC-concept.png Graphic file (type png)
- <use figs/ANC-concept.png>
-Package pdftex.def Info: figs/ANC-concept.png used on input line 644.
-(pdftex.def)             Requested size: 455.24411pt x 256.07507pt.
-
-[21 <./figs/cheby1-rp-comparison.png> <./figs/cheby2-rp-comparison.png>]
-[22 <./figs/ANC-concept.png (PNG copy)>]
-
-LaTeX Warning: Citation `michael17' on page 23 undefined on input line 728.
-
-[23]
-
-LaTeX Warning: Reference `fig:jabra' on page 24 undefined on input line 787.
-
-<figs/jabra.png, id=174, 963.6pt x 542.025pt>
-File: figs/jabra.png Graphic file (type png)
- <use figs/jabra.png>
-Package pdftex.def Info: figs/jabra.png used on input line 790.
-(pdftex.def)             Requested size: 182.09486pt x 102.42342pt.
- [24 <./figs/jabra.png (PNG copy)>]
-
-LaTeX Warning: Reference `fig:gatt-flow' on page 25 undefined on input line 827
-.
-
-<figs/gatt-flow.png, id=184, 948.54375pt x 797.98125pt>
-File: figs/gatt-flow.png Graphic file (type png)
-
-<use figs/gatt-flow.png>
-Package pdftex.def Info: figs/gatt-flow.png used on input line 831.
-(pdftex.def)             Requested size: 364.19667pt x 306.38965pt.
-
-
-LaTeX Warning: Reference `section:earbud-problem' on page 25 undefined on input
- line 839.
-
-[25 <./figs/gatt-flow.png>] [26]
-Chapter 4.
-
-LaTeX Warning: Reference `section:sync' on page 27 undefined on input line 863.
-
-
-[27
-
-]
-
-LaTeX Warning: Citation `Banerjee15' on page 28 undefined on input line 941.
-
-
-LaTeX Warning: Reference `fig:sim-beat' on page 28 undefined on input line 943.
-
-
-
-LaTeX Warning: Reference `fig:sim-beats' on page 28 undefined on input line 949
-.
-
-
-LaTeX Warning: Reference `fig:sim-beats-noise' on page 28 undefined on input li
-ne 954.
-
-! Missing number, treated as zero.
-<to be read again> 
-                   \hbox 
-l.960 	\centerline
-                  {\includegraphics[width=0.6\textwidth]{figs/sim-beat.png}} 
+! Undefined control sequence.
+l.506 ...ed takes two parameters: step size (\empg
+                                                  {g}) and 
 Here is how much of TeX's memory you used:
- 7976 strings out of 494953
- 121109 string characters out of 6180977
+ 7878 strings out of 494953
+ 119505 string characters out of 6180977
  215398 words of memory out of 5000000
- 11101 multiletter control sequences out of 15000+600000
- 11729 words of font info for 43 fonts, out of 8000000 for 9000
+ 11054 multiletter control sequences out of 15000+600000
+ 11429 words of font info for 42 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 37i,11n,40p,212b,472s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 37i,11n,40p,212b,395s stack positions out of 5000i,500n,10000p,200000b,80000s
 
 !  ==> Fatal error occurred, no output PDF file produced!
