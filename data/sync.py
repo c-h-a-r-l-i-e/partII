@@ -399,12 +399,12 @@ def plotCrossCorrelation(data):
     ecgCorrelation = np.abs(data.getCrossCorrelation(watchFirst=False))
 
     xs = np.linspace(0,120,watchCorrelation.size)
-    plt.subplot(1,2,1)
+    #plt.subplot(1,2,1)
     plt.plot(xs, watchCorrelation)
     plt.xlabel("Time (s)")
-    plt.ylabel("Cross-correlation")
-    plt.title("Cross-correlation moving ECG acceleration")
+    plt.ylabel("Absolute Cross-correlation")
     plt.axis([0,120,-6,65])
+    return
     plt.subplot(1,2,2)
     plt.plot(xs, ecgCorrelation)
     plt.xlabel("Time (s)")
@@ -492,6 +492,9 @@ if __name__ == "__main__":
     watchData = watchdata.getWatchData(watchDirectory)
 
     sync = getSync(ecgFile, watchDirectory)
+
+    plotCrossCorrelation(sync)
+    plt.show()
 
     plotAccelerometer(sync)
     plt.show()

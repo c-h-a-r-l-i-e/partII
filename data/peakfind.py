@@ -117,6 +117,11 @@ def find_peaks_min_sd(signal, window_size=0.75):
 
     return np.array(current_peaks)
 
+def get_rate_min_sd(signal):
+    peaks = find_peaks_min_sd(signal)
+    rate = peaks.size / (signal.getValues().size / signal.getFrequency()) * 60
+    return rate
+
 
 def plot_peaks_min_sd(signal): 
     peaks = find_peaks_min_sd(signal)

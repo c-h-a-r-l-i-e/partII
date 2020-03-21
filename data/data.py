@@ -57,3 +57,11 @@ class Signal():
     @property
     def size(self):
         return self.vals.size
+
+    @property
+    def frequency(self):
+        return self.freq
+
+    @property
+    def values(self):
+        return self.values.copy()

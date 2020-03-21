@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import sys
 import os
 import timeit
+import testsyncs
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
@@ -153,17 +154,16 @@ def sim_heartbeat_noisy(freq, size, heart_rate):
     hb = sim_heartbeat(freq, size, heart_rate, 0.1, 0.1)
 
     # Low frequency
-    hb_noisy = hb + sim_heartbeat_noise(freq, hb.size, 0.45 + 0.05 * np.random.sample() , 0.5)
-    hb_noisy += sim_heartbeat_noise(freq, hb.size, 0.45 + 0.05 * np.random.sample() , 0.5)
+    hb_noisy = hb + sim_heartbeat_noise(freq, hb.size, 0.3, 0.5)
+    hb_noisy = hb + sim_heartbeat_noise(freq, hb.size, 0.2, 0.3)
 
     # High frequency
-    hb_noisy += sim_heartbeat_noise(freq, hb.size, 4 + 0.05 * np.random.sample(), 0.5)
-    hb_noisy += sim_heartbeat_noise(freq, hb.size, 4 + 0.05 * np.random.sample(), 0.5)
+    # hb_noisy += sim_heartbeat_noise(freq, hb.size, 4 + 0.05, 0.5)
+    hb_noisy += np.random.normal(0, 3, hb.size)
 
     #xs = np.arange(0, hb.size / freq, 1/freq)
-    #plt.plot(xs, hb)
+    #plt.plot(xs, hb_noisy)
     #plt.show()
-    #plt.plot()
     
     return (hb, hb_noisy)
 
@@ -177,17 +177,83 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import filtering
 order = {}""".format(order)
 
-    test = """filtering.chebyshev2_filter(ppg, 0.4, 4, order=order)"""
-    time = timeit.timeit(setup=setup, stmt=test, number=10000)
+    test = """filtering.butter_bandpass_filter(ppg, 0.4, 4, order=order)"""
+    time = timeit.timeit(setup=setup, stmt=test, number=1000)
     print("time at order {}, is {}".format(order, time))
 
-def test_validity_butter(order):
+def test_time_cheby(order):
+    setup = """import testsyncs
+syncs = testsyncs.getSyncs()
+import os
+s = syncs[0]
+ecg, ppg = s.getSyncedSignals()
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+import filtering
+order = {}""".format(order)
+
+    test = """filtering.chebyshev2_filter(ppg, 0.4, 4, order=order)"""
+    time = timeit.timeit(setup=setup, stmt=test, number=1000)
+    print("time at order {}, is {}".format(order, time))
+
+
+def plot_power_spectrum(samples, freq):
+    ps = np.abs(np.fft.rfft(samples)) ** 2
+
+    xs = np.linspace(0, freq/2, ps.size)
+    plt.xlabel("Frequency (hz)")
+    plt.ylabel("Power")
+
+    plt.plot(xs, ps)
+
+
+def plot_validity_filter(butterworth):
+    """
+    Plot the power spectrum of the simulated hearbeat before and after at various different orders.
+    """
     freq = 100
     size = 120
     heart_rate = 120
     lowcut = 0.4
     highcut = 4
-    iters = 1000
+    iters = 1
+
+    hb, hb_noisy = sim_heartbeat_noisy(freq, size, heart_rate)
+
+    plt.subplot(4,2,1)
+    plt.title("Clean Power Spectrum")
+    plot_power_spectrum(hb, freq)
+    plt.xlim(0,10)
+    plt.ylim(0,2400000)
+
+    plt.subplot(4,2,2)
+    plt.title("Noisy Power Spectrum")
+    plot_power_spectrum(hb_noisy, freq)
+    plt.xlim(0,10)
+    plt.ylim(0,2400000)
+
+    hb_noisy_signal = data.getSignal(hb_noisy, freq)
+    for order in range(1, 7, 1):
+        plt.subplot(4,2,2+order)
+        plt.title("Order {} Spectrum".format(order))
+        if butterworth:
+            filtered = filtering.butter_bandpass_filter(hb_noisy_signal, lowcut, highcut, order=order)
+        else:
+            filtered = filtering.chebyshev2_filter(hb_noisy_signal, lowcut, highcut, order=order)
+        plot_power_spectrum(filtered.getValues(), freq)
+        plt.xlim(0,10)
+        plt.ylim(0,2400000)
+
+
+
+
+
+def test_validity_butter(order):
+    freq = 100
+    size = 480
+    heart_rate = 180
+    lowcut = 0.4
+    highcut = 4
+    iters = 1
 
     total_product = 0
     
@@ -200,6 +266,10 @@ def test_validity_butter(order):
 
         filtered = filtering.butter_bandpass_filter(hb_noisy_signal, lowcut, highcut, order=order)
 
+        filtered.plot("filtered")
+        plt.legend()
+        plt.show()
+
         total_product += np.max(np.correlate(filtered.getValues() / np.linalg.norm(filtered.getValues()), 
             hb / np.linalg.norm(hb), mode='same'))
 
@@ -207,6 +277,9 @@ def test_validity_butter(order):
     print("average product : {}".format(average_product))
 
 if __name__ == "__main__":
+    plot_validity_filter(False)
+    plt.show()
+    plot_validity_filter(True)
+    plt.show()
     for i in range(1, 7, 1):
         print("order {}".format(i))
-        test_time_butter(i)

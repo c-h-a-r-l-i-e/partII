@@ -5,7 +5,7 @@ import numpy as np
 import sync
 import data
 
-def butter_bandpass_filter(signal, lowcut, highcut, order=4):
+def butter_bandpass_filter(signal, lowcut, highcut, order=4): 
     freq = signal.getFrequency()
     samples = signal.getValues()
     nyq = freq / 2
