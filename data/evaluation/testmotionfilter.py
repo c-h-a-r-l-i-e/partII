@@ -15,11 +15,12 @@ import peakfind
 
 
 
-def test_validity(step, nlms=True, filterx=True, filtery=False, filterz=True):
-    segmentsize = 30
+def test_validity(ax1, ax2, step, nlms=True, filterx=True, filtery=False, filterz=False, taps=20):
+    segmentsize = 10
     ppgs, ecgs, accxs, accys, acczs = testsyncs.getSegmentsAtNoise(testsyncs.NOISE_MEDIUM, segmentsize)
 
     average_error = 0
+    errors = np.zeros(len(ppgs))
     for i in range(len(ppgs)):
         # Remove unrelated noise
         ppg = filtering.butter_bandpass_filter(ppgs[i], 0.4, 4, order=2)
@@ -30,11 +31,11 @@ def test_validity(step, nlms=True, filterx=True, filtery=False, filterz=True):
         # Apply motion filter to each axis dependant on filter parameters
         filtered = ppg
         if filterx:
-            filtered = motionfilter.adaptiveFilter(filtered, accx, step, nlms)
+            filtered = motionfilter.adaptiveFilter(filtered, accx, step, nlms, M=taps)
         if filtery:
-            filtered = motionfilter.adaptiveFilter(filtered, accy, step, nlms)
+            filtered = motionfilter.adaptiveFilter(filtered, accy, step, nlms, M=taps)
         if filterz:
-            filtered = motionfilter.adaptiveFilter(filtered, accz, step, nlms)
+            filtered = motionfilter.adaptiveFilter(filtered, accz, step, nlms, M=taps)
         
         # Calculate heart-rate from filtered signal, and compare to ECG heart-rate
         filteredpeaks = peakfind.find_peaks_min_sd(filtered)
@@ -45,11 +46,25 @@ def test_validity(step, nlms=True, filterx=True, filtery=False, filterz=True):
         wd, m = hp.process(hp.scale_data(filtered_ecg), ecgs[i].getFrequency())
         ecgrate = m["bpm"]
 
-        average_error += np.abs(ecgrate - filteredrate)
+        errors[i] = filteredrate - ecgrate
+        average_error += np.abs(ecgrate - filteredrate) / len(ppgs)
 
         #print("filtered PPG : {}, ecg : {}".format(filteredrate, ecgrate))
 
-    print("step = {} --> error = {}".format(step, average_error))
+    # plot cdf
+    xs = np.sort(errors)
+    ys = np.arange(1, len(ppgs) + 1, 1) / len(ppgs)
+
+    print("step={},nlms={},x={},y={},z={},taps={} --> average error = {}".format(step, 
+        nlms, filterx, filtery, filterz, taps, average_error))
+
+    #plt.figure(num="step={},nlms={},taps={}".format(step, nlms, taps))
+    ax1.plot(xs, ys, label="Number of taps {}".format(taps))
+
+    xs = np.sort(np.abs(errors))
+    
+    ax2.plot(xs, ys, label="Number of taps {}".format(taps))
+
 
         
 
@@ -93,7 +108,41 @@ def test_validity_butter(order):
     average_product = total_product / iters
     print("average product : {}".format(average_product))
 
+
+def plot_adaptive_validity():
+    ax1 = plt.subplot(121)
+    ax2 = plt.subplot(122)
+    nlms = False 
+    for taps in [1,3,4,5,6,8]:
+        for step in [1]: 
+            print("########   taps = {}, steps = {}  ############".format(taps, step))
+            for x in [True]:
+                for y in [False]:
+                    for z in [False]:
+                        test_validity(ax1, ax2, step, nlms, x, y, z, taps=taps)
+
+    ax1.legend()
+    ax1.set_title("Error")
+    ax1.set_xlabel("Error (bpm)")
+    ax1.set_ylabel("Cumulative probability")
+    ax1.set_ylim(0,1)
+    ax1.set_xlim(-100,100)
+
+    ax2.legend()
+    ax2.set_title("Absolute Error")
+    ax2.set_xlabel("Absolute Error (bpm)")
+    ax2.set_ylabel("Cumulative probability")
+    ax2.set_ylim(0,1)
+    ax2.set_xlim(0,200)
+    plt.show()
+
 if __name__ == "__main__":
-    for i in (0.1,0.2,0.5,1,2,5):
-        test_validity(i)
+    plot_adaptive_validity()
+
+
+
+
+
+#    for i in (0.1,0.2,0.5,1,2,5):
+#        test_validity(i)
 

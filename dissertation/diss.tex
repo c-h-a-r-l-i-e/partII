@@ -114,8 +114,8 @@ appreciated.
 \chapter{Introduction}
 
 Elite runners have historically used heart rate to provide an accurate 
-measure of fitness, and allow them to train more effectively. [Expand on uses
-of heart rate]. Previously, Electrocardiography (ECG) chest straps have been 
+measure of fitness, and allow them to train more effectively. 
+Previously, Electrocardiography (ECG) chest straps have been 
 used to measure heart rate, by detecting the electrical signals controlling 
 the expansion and contraction of the heart. They are accurate devices however
 often prohibitively expensive, and hence inaccessible to casual runners.
@@ -129,12 +129,12 @@ the wrists of any runner.
 
 Switching from ECG to PPG is not without flaws though - ECG sensors return a
 clean signal, as opposed to PPG signals which are contaminated with
-noise. [More details about noise]. 
+noise.
 
 In particular when running, the motion can cause blood velocity to 
 change, and the sensor can slip across the skin \cite{Wijshoff17}, 
-\cite{Wood06}. These result in a distortion to the PPG signal, known as a
-motion artifact (MA). Fortunately, smartwatches contain other sensors, such
+\cite{Wood06}. These result in distortions to the PPG signal, known as a
+motion artifacts (MAs). Fortunately, smartwatches contain other sensors, such
 as accelerometers and gyroscopes which can be used to predict the presence of 
 MAs, and hence compensate for them.
 
@@ -388,8 +388,8 @@ my application:
 
 	\item \emph{create(file, metadata)} which creates a \emph{file} with
 		\emph{metadata}. Note that as folders
-		are just files, this is also how folders are created, the
-		fact a file is a folder is specified within \emph{metadata}.
+		are just files, this is also how folders are created, by
+		specifying the folder type in \emph{metadata}.
 \end{itemize}
 
 Using these methods, I define three methods within \emph{gdrive.py}, as follows:
@@ -696,7 +696,7 @@ and visa versa if the gradient is negative.
 LMS takes a parameter - step size \(\mu\), which scales how much we move the
 weights by. The equation used to update weights is \[w_{n+1}=w_n-\mu \nabla
 E(y^2)[n]\]
-where \(W_n\) is the \(n\)th filter weight, and \(\nabla E(y^2)[n]\) is the
+where \(w_n\) is the \(n\)th filter weight, and \(\nabla E(y^2)[n]\) is the
 \(n\)th weight gradient.
 
 Step size must be chosen very carefully, as if it is too large there is a risk
@@ -825,7 +825,7 @@ pieces of terminology, which I explain here:
 with which data values are transported by Bluetooth LE.
 
 \paragraph{GATT Server} is a device which stores and distributes information. In
-our case the earbuds are a GATT client.
+our case the earbuds are a GATT server.
 
 \paragraph{GATT Client} is a device which requests information from a GATT
 server, in our case a mobile phone.
@@ -955,7 +955,7 @@ To test the quality of the filter I devised a test where I simulate a possible
 PPG signal without noise, then add noise. The noise I add will be random
 amount of high and low frequency noise, as we get in an actual PPG signal.
 Then to calcualte the quality of the filter, I filter the signal, and compare
-the ouput to the clean signal, using cross-correlation.
+the power spectrums of the filtered signals to the clean signal.
 
 To simulate PPG signals, I found that two Guassians could be used
 \cite{Banerjee15}. One Gaussian represents the higher systolic peak, and the
@@ -968,8 +968,10 @@ repeating the pattern heart-beat every 0.5 seconds. In each beat I randomly
 vary the amplitude of both peaks, as would happen with an actual heart-beat.
 See figure \ref{fig:sim-beats} for a simulated heart-beat of 5 beats.
 
-To represent the noise, I use random frequency and amplitude sin-waves at
-frequencies which would be considered noise (below 30 bpm and above 240 bpm).
+To represent the noise, I add a random Gaussian noise to each sample, to
+represent the measurement error, along with low frequency noise at 0.2 and 0.3
+hz, representing the noise present for example due to temperature variation,
+and breathing.  
 The results of adding this noise to a signal can be seen in figure
 \ref{fig:sim-beats-noise}.
 
@@ -981,13 +983,13 @@ The results of adding this noise to a signal can be seen in figure
 		\label{fig:sim-beat}
 	\end{subfigure}
 	\hfill
-	\begin{subfigure}[b]{0.7\textwidth}
+	\begin{subfigure}[b]{0.5\textwidth}
 		\centerline{\includegraphics[width=\textwidth]{figs/sim-beats.png}}
 		\caption{Multiple simulated heart-beats.}
 		\label{fig:sim-beats}
 	\end{subfigure}
 	\hfill
-	\begin{subfigure}[b]{0.8\textwidth}
+	\begin{subfigure}[b]{0.6\textwidth}
 		\centerline{\includegraphics[width=\textwidth]{figs/sim-beats-with-noise.png}}
 		\caption{Simulated heart-beats with noise.}
 		\label{fig:sim-beats-noise}
@@ -1015,10 +1017,18 @@ noisy signal. The clean signal spectrum shows a clear peak at 2 hz, which
 corresponds exactly to the heart-rate we chose - 120 bpm. Additionally, there
 are peaks at 4 and 6 hz which are a feature of the power spectrum - it
 produces peaks at 2, 3, 4, and so on times the principle frequency. The noisy
-spectrum shows the high frequency noise. 
+spectrum shows the additive Gaussian noise, which is present at every
+frequency, and additionally a small peak at around 0.2 hz, which shows the low
+frequency noise. I will compare how effective the filters are at removing both
+the random noise and the low frequency noise.
 
-The results show that an order 1 filter is not useful, as there is almost no
-useful signal present.
+The results show that at all orders, the desired signal at 2 hz is present.
+However, as the filter order increases, the amount of random noise present
+decreases. The 1st order filter has a wide range of random noise, whereas the
+5th order filter removes almost all noise outside the range 0.4 to 4 hz.
+Interestingly, there is an artefact in the 6th order filter, where there is a
+spike at 0.3 hz, which is larger than the desired signal. This is most likely
+a result of TODO.
 
 \begin{figure}
 	\centering
@@ -1040,6 +1050,11 @@ in execution time
 between an odd order and the next order. This result means we should use the
 lowest order which provides sufficient filtering.
 
+If choosing a Butterworth filter, I would opt for a 5th order filter, as it
+provides the most filtering, whilst not producing artefacts as seen in the 6th
+order filter. If the 5th order filter takes too long for the application, then
+a lower order could be chosen.
+
 \begin{figure}[tbh]
 	\centerline{\includegraphics[width=0.5\textwidth]{figs/butter-time.png}}
 	\caption{The effect of Butterworth filter order on execution time.}
@@ -1047,6 +1062,32 @@ lowest order which provides sufficient filtering.
 \end{figure}
 
 \subsection{Chebyshev Type II Filter}
+
+I test the validity of the filter by again comparing the power spectrum produced by
+filtering the simulated heart-beat I detail above. The power spectrums are
+shown in Figure 
+\ref{fig:cheby2-validity}. 
+
+The results show that an order 1 filter is not useful, as there is almost no
+useful signal present. This is as a first order Chebyshev Type-2 filter
+provides a very narrow pass-band, resulting in almost no useful signal passing
+through. The order 2 filter is an improvement, and there is a
+clear peak at 2 hz, however it is about as powerful as the random noise,
+meaning we have not recovered the signal as accurately as we might want. 
+Orders 3,4,5 and 6 are all very
+similar, with a very clear peak at 2 hz, and the random noise only present
+between 0.4 and 4 hz, as we wanted from the filter. The 2 hz peak is also much
+larger than the random noise, as desired. All of the filter orders effectively
+dealt with the low frequency noise, it is not featured within the power
+spectrums at all.
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\textwidth]{figs/cheby2-validity.png}
+	\caption{Chebyshev Filter Power Spectrums.}
+	\label{fig:cheby2-validity}
+\end{figure}
 
 I run the timing test again on the Chebyshev type II filter, taking the average amount
 of time taken to filter the same 35 minute segment as before. The results are
@@ -1058,6 +1099,10 @@ Butterworth filter for each order. If there is no significant filtering
 performance improvement to using the Chebyshev filter, we should therefore use the
 Butterworth filter.
 
+If I was going to choose a Chebyshev Type II filter, I would choose an order 3
+filter, as it provides sufficient filtering, without reducing the power of the
+useful signal too much. Additionally, any higher-order filters would take too
+much time.
 
 \begin{figure}[tbh]
 	\centerline{\includegraphics[width=0.5\textwidth]{figs/cheby2-time.png}}
@@ -1163,21 +1208,6 @@ suddenly just drops to zero.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the appendices
 \appendix
-
-
-\chapter{Latex source}
-
-\section{diss.tex}
-{\scriptsize\verbatiminput{diss.tex}}
-
-\chapter{Makefile}
-
-\section{makefile}\label{makefile}
-{\scriptsize\verbatiminput{makefile.txt}}
-
-\section{refs.bib}
-{\scriptsize\verbatiminput{refs.bib}}
-
 
 \chapter{Project Proposal}
 

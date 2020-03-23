@@ -34,6 +34,15 @@ class WatchData:
         freq = time.size / ((time[time.size-1] - time[0]) / 1000)
         return data.getSignal(ppg, freq)
 
+    """
+    Return the PPG signal as a numpy array, along with its frequency (hz)
+    """
+    @property
+    def times(self):
+        df = pandas.read_csv(os.path.join(self.directory, "ppg.csv"))
+        time = df['time'].to_numpy()
+        return time
+
 
     """
     Return an acceletation signal axis (x, y or z) as a signal object

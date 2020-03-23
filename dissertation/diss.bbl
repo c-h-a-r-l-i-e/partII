@@ -1,0 +1,68 @@
+\begin{thebibliography}{10}
+
+\bibitem{allen02}
+John Allen, John~R Frame, and Alan Murray.
+\newblock Microvascular blood flow and skin temperature changes in the fingers
+  following a deep inspiratory gasp.
+\newblock {\em Physiological measurement}, 23(2):365, 2002.
+
+\bibitem{Banerjee15}
+Rohan Banerjee, Avik Ghose, Anirban~Dutta Choudhury, Aniruddha Sinha, and Arpan
+  Pal.
+\newblock Noise cleaning and gaussian modeling of smart phone
+  photoplethysmogram to improve blood pressure estimation.
+\newblock {\em 2015 IEEE International Conference on Acoustics, Speech and
+  Signal Processing (ICASSP)}, pages 967--971, 2015.
+
+\bibitem{wiki:fingerppg}
+Wikimedia Commons.
+\newblock File:puls oxymeter.jpg --- wikimedia commons{,} the free media
+  repository, 2013.
+\newblock [Online; accessed 21-February-2020].
+
+\bibitem{elgendi12}
+Mohamed Elgendi.
+\newblock On the analysis of fingertip photoplethysmogram signals.
+\newblock {\em Current cardiology reviews}, 8(1):14--25, 2012.
+
+\bibitem{kim15}
+J.~{Kim}, T.~{Lee}, J.~{Kim}, and H.~{Ko}.
+\newblock Ambient light cancellation in photoplethysmogram application using
+  alternating sampling and charge redistribution technique.
+\newblock In {\em 2015 37th Annual International Conference of the IEEE
+  Engineering in Medicine and Biology Society (EMBC)}, pages 6441--6444, Aug
+  2015.
+
+\bibitem{michael17}
+Scott Michael, Kenneth~S Graham, and Glen~M Davis.
+\newblock Cardiac autonomic responses during exercise and post-exercise
+  recovery using heart rate variability and systolic time intervals—a review.
+\newblock {\em Frontiers in physiology}, 8:301, 2017.
+
+\bibitem{shin16}
+Hangsik Shin.
+\newblock Ambient temperature effect on pulse rate variability as an
+  alternative to heart rate variability in young adult.
+\newblock {\em Journal of clinical monitoring and computing}, 30(6):939--948,
+  2016.
+
+\bibitem{Widrow75}
+B.~{Widrow}, J.~R. {Glover}, J.~M. {McCool}, J.~{Kaunitz}, C.~S. {Williams},
+  R.~H. {Hearn}, J.~R. {Zeidler}, J.~{Eugene Dong}, and R.~C. {Goodlin}.
+\newblock Adaptive noise cancelling: Principles and applications.
+\newblock {\em Proceedings of the IEEE}, 63(12):1692--1716, Dec 1975.
+
+\bibitem{Wijshoff17}
+R.~W. C. G.~R. {Wijshoff}, M.~{Mischi}, and R.~M. {Aarts}.
+\newblock Reduction of periodic motion artifacts in photoplethysmography.
+\newblock {\em IEEE Transactions on Biomedical Engineering}, 64(1):196--207,
+  Jan 2017.
+
+\bibitem{Wood06}
+L.~B. {Wood} and H.~H. {Asada}.
+\newblock Noise cancellation model validation for reduced motion artifact
+  wearable ppg sensors using mems accelerometers.
+\newblock In {\em 2006 International Conference of the IEEE Engineering in
+  Medicine and Biology Society}, pages 3525--3528, Aug 2006.
+
+\end{thebibliography}

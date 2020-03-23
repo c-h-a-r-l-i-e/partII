@@ -158,7 +158,6 @@ def sim_heartbeat_noisy(freq, size, heart_rate):
     hb_noisy = hb + sim_heartbeat_noise(freq, hb.size, 0.2, 0.3)
 
     # High frequency
-    # hb_noisy += sim_heartbeat_noise(freq, hb.size, 4 + 0.05, 0.5)
     hb_noisy += np.random.normal(0, 3, hb.size)
 
     #xs = np.arange(0, hb.size / freq, 1/freq)
@@ -243,8 +242,28 @@ def plot_validity_filter(butterworth):
         plt.xlim(0,10)
         plt.ylim(0,2400000)
 
+def plot_filtered_and_clean(butter, order, size=120):
+    freq = 100
+    heart_rate = 120
+    lowcut = 0.4
+    highcut = 4
+    iters = 1
+
+    hb, hb_noisy = sim_heartbeat_noisy(freq, size, heart_rate)
+    hb_noisy_signal = data.getSignal(hb_noisy, freq)
+
+    if butter:
+        filtered = filtering.butter_bandpass_filter(hb_noisy_signal, lowcut, highcut, order=order)
+    else:
+        filtered = filtering.chebyshev2_filter(hb_noisy_signal, lowcut, highcut, order=order)
 
 
+    xs = np.arange(0, hb.size / freq, 1/freq)
+    plt.plot(xs, hb, label="Clean signal")
+
+    filtered.plot("Filter order {}".format(order))
+
+    plt.legend()
 
 
 def test_validity_butter(order):
@@ -277,9 +296,15 @@ def test_validity_butter(order):
     print("average product : {}".format(average_product))
 
 if __name__ == "__main__":
-    plot_validity_filter(False)
-    plt.show()
+    #plot_validity_filter(False)
+    #plt.show()
     plot_validity_filter(True)
     plt.show()
     for i in range(1, 7, 1):
         print("order {}".format(i))
+        plot_filtered_and_clean(True, i)
+        plt.show()
+        #xs = np.arange(0, hb.size / freq, 1/freq)
+        #plt.plot(xs, hb_noisy)
+        #plt.show()
+

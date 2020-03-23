@@ -100,13 +100,12 @@ def lms(ppg, accel):
 Use an adaptive filter to remove noise caused by (and hence correlating
 with) referenceMotion, from signal.
 """
-def adaptiveFilter(signal, referenceMotion, step=1, nlms=True):
+def adaptiveFilter(signal, referenceMotion, step=1, nlms=True, M = 20):
     # Sample referenceMotion at signal's frequency
     freq = signal.getFrequency()
     referenceMotion = referenceMotion.resample(freq)
     referenceMotion = referenceMotion.crop(signal.size)
 
-    M = 20 # Num of filter taps
 
     if nlms:
         y, e, w = adf.nlms(referenceMotion.getValues(), signal.getValues(),
@@ -114,6 +113,7 @@ def adaptiveFilter(signal, referenceMotion, step=1, nlms=True):
     else:
         y, e, w = adf.lms(referenceMotion.getValues(), signal.getValues(),
                 M, step, returnCoeffs=True)
+
 
 
     filtered = data.getSignal(e, freq)
