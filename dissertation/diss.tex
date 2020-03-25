@@ -7,6 +7,8 @@
 \usepackage{pdfpages}
 \usepackage{caption}
 \usepackage{subcaption}
+\usepackage{csvsimple}
+\usepackage{longtable}
 
 
 \raggedbottom                           % try to avoid widows and orphans
@@ -906,8 +908,12 @@ calculating the initial cross correlation. I will test the algorithm with differ
 values of this parameter, so I can determine which gives the best peformance
 whilst stil being valid. 
 
-The results of my test are displayed below 
-\begin{center}
+The results of my test are displayed in Table \ref{table:cross-correlation}. 
+
+\begin{table}
+\centering
+\caption{Comparing Cross-Correlation Techniques.}
+\label{table:cross-correlation}
 \begin{tabular}{ | c | c | c | }
 	\hline
 	Algorithm & Average Absolute Error (s) & Time for 500
@@ -920,7 +926,7 @@ The results of my test are displayed below
 	Informed g = 1s & 0.137 & 7.069  \\
 	\hline
    \end{tabular}
-\end{center}
+\end{table}
 
 The first result I draw from this table is that my informed algorithm leads to
 a massive improvement in performance. Even the slowest informed runtime is 6
@@ -1137,19 +1143,99 @@ the algorithm on it. With the results, I calculate the heart-rate that my
 heart-rate calculate algorithm would compute. 
 I use my standard deviation minimisation algorithm from \ref{}
 I then compare this to the
-ground truth which is the ECG data associated with that segment, to get an
-error number.
+ground truth which is the ECG data associated with that segment, to get the
+error for that segment.
 
 I test two of my motion filtering algorithm - Least Mean Squares (LMS) and Normalised Least Mean
 Squares (NLMS). Both of these have a parameter called step-size, so I will
 compare both of them with a variety of step sizes to determine which is
 optimal for each class of motion noise.
 
+
 \subsection{LMS}
 
+Before I begin testing, I must determine which axis I should filter on. In
+other words, do I adaptively filter against acceleration from the x, y or z
+axis, or some combination of these axes. To test this, I ran the adaptive
+filters on all of the medium noise data I have, at various different step sizes
+and number of taps. For each tap number and step size, I try every possible
+combination of filtering using the x, y and z acceleration. I have placed the
+results of these tests in Appendix \ref{section:lms-errors}.
+
+I condensed the information within the tables, by averaging the ordering of
+the errors. If a particular combination of axis produced the best filtering,
+based on average absolute error 
+it is assigned number 1, the next best 2 and so on. Then, I take the average
+of this order over each segment of data, which is shown in Table \ref{table:lms-errors}.
+
+\begin{table}[]
+\centering
+\caption{Comparing LMS Filtering with Different Axes.}
+\label{table:lms-errors}
+\begin{tabular}{|l|l|l|l|}
+\hline
+X Filtering & Y Filtering & Z Filtering & Average Order \\ \hline
+Y           & Y           & Y           & 4.58          \\
+Y           & Y           & N           & 3.68          \\
+Y           & N           & Y           & 2.05          \\
+Y           & N           & N           & 1.15          \\
+N           & Y           & Y           & 6.33          \\
+N           & Y           & N           & 6.13          \\
+N           & N           & Y           & 4.10          \\
+\hline
+\end{tabular}
+\end{table}
+
+The table shows that filtering using just the x-axis, is on average better
+than any other combination, with the closest average order to 1. As a result,
+in these tests I will just be filtering using the x-axis as the reference
+motion.
+
+Next, I determine the number of taps which would be best for filtering the
+data, at low noise, medium noise and high noise. I plot the cumulative
+probability diagram of the error, and the magnitude error, in order to compare
+the error distributions. The results are in Figure \ref{fig:lms-medium}.
+
+\begin{figure}[tbh]
+	\centerline{\includegraphics[width=0.7\textwidth]{figs/lms-taps-error-medium-noise.png}}
+	\caption{Comparison of LMS Error at Different Tap Numbers.}
+	\label{fig:lms-medium}
+\end{figure}
+
+The results show that all of the errors are skewed towards negative values,
+regardless of number of taps. Looking at the absolute errors, we see that
+using 5 taps produces the lowest median absolute error, as the curve remains
+closest to error = 0. Having 1 tap produces a worse error, as we do not reduce
+enough of the motion noise, whereas more taps removes too much data, resulting
+in the error increasing.
+
+Next, using 5 taps, I determine the best step value to use for LMS filtering.
+I plot the cumulative graphs again, see Figure .
 
 \subsection{NLMS}
 
+To determine which axes to use, I run the same test as previously but using
+NLMS instead. The results are in Table \ref{table:nlms-errors}. Again,
+filtering using just the x-axis has a much lower average ordering than the
+other techniques, so I will filter using just the x-axis from here on.
+
+\begin{table}[]
+\centering
+\caption{Comparing NLMS Filtering with Different Axes.}
+\label{table:nlms-errors}
+\begin{tabular}{|l|l|l|l|}
+\hline
+X Filtering & Y Filtering & Z Filtering & Average Order \\ \hline
+Y           & Y           & Y           & 4.68          \\
+Y           & Y           & N           & 4.83          \\
+Y           & N           & Y           & 2.95          \\
+Y           & N           & N           & 1.83          \\
+N           & Y           & Y           & 5.20          \\
+N           & Y           & N           & 5.40          \\
+N           & N           & Y           & 3.13          \\
+\hline
+\end{tabular}
+\end{table}
 
 \section{Heart Rate Calculation}
 
@@ -1176,7 +1262,7 @@ evaluate some of the fixes I propose to issues identified in the evaluation.
 
 The first step I took when evaluating the earbuds was to go on a fast run,
 which would introduce much motion noise on the watch. You can see the
-heart-rate from the earbuds plotted against the hear-rate I received from the
+heart-rate from the earbuds plotted against the heart-rate I received from the
 ECG in Figure \ref{fig:earbud-fast}.
 
 \begin{figure}[tbh]
@@ -1208,6 +1294,15 @@ suddenly just drops to zero.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the appendices
 \appendix
+
+\chapter{Data tables}
+\section{NLMS Absolute Errors} \label{section:nlms-errors}
+
+\csvautolongtable{figs/nlms_validity.csv}
+
+\section{LMS Absolute Errors} \label{section:lms-errors}
+
+\csvautolongtable{figs/lms_validity.csv}
 
 \chapter{Project Proposal}
 
