@@ -191,6 +191,213 @@ peak.
 \label{fig:typicalppgsignal}
 \end{figure}
 
+\section{Running}
+
+\section{Techniques}
+
+In this section, I detail the techniques which I may find useful in my
+implementation.
+
+\section{Filtering} \label{section:intro-filters}
+
+PPGs produce a large amount of noise from various sources:
+\begin{itemize}
+	\item Light pollution. Both DC and AC lights in the environment can
+		infiltrate the sensor, affecting the PPG signal \cite{kim15}.
+	\item Temperature. As temperature increases, so does the volume of
+		blood, which will be picked up by the PPG sensor 
+		\cite{shin16}.
+	\item Breathing. The change in pressure accosiated with respiration
+		causes variations in the flow of blood, and hence can be seen
+		by the PPG sensor \cite{allen02}.
+\end{itemize}
+
+In order to remove much of this noise, we can use filters to remove
+frequencies we know are irrelevant. We know the heartbeat can vary from 
+30 to 220 beats per minute, and hence we would like to disregard any noise 
+outside of this range. In this section, I will introduce the concept of 
+filters.
+
+\begin{figure}[h!]
+	\centerline{\includegraphics[width=0.8\textwidth]{figs/filter.png}}
+\caption{Diagram showing filter characteristics}
+\label{fig:filterdiag}
+\end{figure}
+
+Figure \ref{fig:filterdiag} displays an example filter magnitude response
+diagram. This plots the amount of gain applied to each frequency. A gain of
+zero means the signal is removed, a gain of one means the signal is unchanged.
+The characteristics displayed are as follows.
+
+The passband is the range of frequencies we would like to remain. In an ideal
+filter, there is no loss within the passband.
+
+Passband ripple describes the variation in amplitude \emph{within} the
+passband. An ideal filter will have no passband filter, such that all
+frequencies within the passband are permitted equally.
+
+The transition width is the frequency range between the start and stop band.
+Ideally, this is zero, such that frequencies outside of the passband are
+instantly reduced.
+
+The stopband is the range of frequencies we wish to remove. An ideal filter
+completely removes all frequencies within the stopband.
+
+There are four different filter types, which describe the frequencies we remove, as
+follows:
+
+\begin{itemize}
+	\item Lowpass - allow frequencies below the critical frequency.
+
+	\item Highpass - allow frequencies above the critical frequency.
+
+	\item Bandpass - combination of lowpass and highpass - given two
+		frequencies, we want the passband to be between those
+		frequencies.
+
+	\item Bandstop - given two frequencies, put the stopband between them,
+		leaving the passband outside those frequencies.
+\end{itemize}
+
+\section{Spectrum}
+
+A spectrum (or power spectrum) describes the power of each frequency present
+within a signal.
+This is a useful tool for analysing signals, giving us the ability to detect
+where the frequency corresponding to heart-rate is, and additionally detect
+what frequencies are noise in a signal.
+
+One approach used to calculate a spectrum is known as a fast Fourier transform
+(FFT). A FFT is a very fast algorithm which expresses a signal as a sum of
+periodic components.
+
+
+\section{Current Algorithms}
+
+In this section, I look at the literature already produced on this topic,
+discussing the algorithms which have been proposed in various papers.
+
+\subsection{TROIKA}
+
+TROIKA \cite{Zhang15} is a general framework for removing motion artifacts
+from PPG signals taken when exercising. It consists of signal decomposiTion
+, sparse signal RecOnstruction and spectral peaK trAcking, each of which I will
+explain here.
+
+Signal decomposition is where a signal \(s\) is split into \(Q\) components
+such that $s=\sum_1^Q s_i$. TROIKA recommends using singular spectrum analysis
+(SSA) which decomposes the signal into oscillatory components and noise. It
+determines what components are likely noise based on analysis of the frequency
+spectrum of accelerometer data. The dominant frequencies in the accelerometer
+signals are determined to be noise in the PPG signal.
+
+Sparse signal reconstruction (SSR) is used to generate the frequency spectrum of the
+now filtered PPG signal. As opposed to a periodogram, the spectrum from SSR
+gives higher resolution frequency information, allowing more precise
+identification of peaks.
+
+Spectral peak tracking uses the current SSR spectrum, and the last known
+heart-rate. In the paper, they use an 8s window, with 2 s shifts, which means
+the algorithm is run on one 8 s segment, before being shifted 2 s forwards then
+run again.
+The windows of the signal overlap by 6 s, meaning that the heart-rate
+between two calculations will be very similar. Hence, TROIKA recommends
+selecting a peak in a small range around the last known heart-rate.
+
+\subsection{Finite State Machine}
+
+The issue with the TROIKA framework is that it is prone to repeating errors
+when they happen. For example, if the algorithm accidentally locks on to a frequency
+related to motion it is very difficult to recover. A technique
+suggested to avoid these errors makes use of finite state machines (FSM)
+\cite{Chung19}.
+
+This approach uses a FSM with four states as follows: 
+
+\begin{itemize}
+	\item Stable - the heart-rate estimate is likely to be very accurate.
+	\item Recovery - the heart-rate estimate is somewhat accurate.
+	\item Alert - the heart-rate estimate is possibly wrong.
+	\item Uncertain - the heart-rate estimate is probably wrong.
+\end{itemize}
+
+To transition between states we need some sort of measure which tells us how
+confident we are in the heart-rate estimation - in the FSM we use crest factor
+(CF). The CF is the ratio of the peak value to the root-mean-squared value.
+The lower the CF, the less likely the HR estimate is to be accurate. Hence,
+when the CF value falls below some threshold, we go into a state with less
+confidence in the heart-rate value. Additionally we are guided by heart-rate
+change - if the heart-rate remains constant that is a sign we are locked on
+the wrong signal.
+
+Now, we have a FSM which will describe our confidence in a heart-rate
+measurement - the question is how we use it. In the paper, an estimation is
+only valid if it was taken in the
+stable state. Hence, we sacrifice some of the data, but as a result we can be
+much more confident in the results we do get.
+
+\subsection{JOSS}
+
+JOSS \cite{Zhang15-2}, or JOint Sparse Spectrum reconstruction consists of two
+stages, joint sparse spectrum reconstruction and spectral peak tracking. I
+will explain these here.
+
+Joint sparse spectrum reconstruction aims to produce a spectrum of the raw PPG
+as though there were no MAs. It does this by simultaneously calculating the
+power spectrums of the PPG signal and all the accelerometer channels. It then
+subtracts the accelerometer channels spectrums from the PPG spectrum in such a
+way that retains only the frequencies associated with heart-rate.
+
+Spectral peak tracking is much the same as described in TROIKA, initially
+finding the highest peak in the PPG spectrum. It then follows that peak using
+the assumption that in two successive windows the heart-rate will be very
+similar.
+
+JOSS improves on TROIKA, providing a lower average absolute estimation error
+and additionally works better when the PPG is sampled at a lower rate.
+
+
+\subsection{PARHELIA}
+
+PARHELIA \cite{Fujita18} is a PARticle filter-based algorithm for HEart rate
+estimation using photopLethymographIc signAls. It consists of two stages:
+spectral analysis, and then particle filtering, which I will delve into now.
+
+The spectral analysis computes the spectrum of the PPG and each acceleration
+signal, by running FFT on each. 
+
+A particle filter can be used to represent uncertainty in a system, by having
+multiple particles representing estimates of the current state. Each particle
+is assigned a weight which represents our confidence in that particle being
+correct. In PARHELIA, there are five steps, as follows:
+\begin{enumerate}
+	\item Initialisation - generate particles uniformly in the range 60
+		bpm and 170 bpm.
+
+	\item Prediction - every iteration particles are moved randomly based on a normal
+		distribution with standard deviation 6 bpm.
+
+	\item Weight calculation - the weight of a particle is increased if
+		it's bpm is a peak in the PPG signal, and reduced if it's a
+		peak in the accelerometer data.
+
+	\item BPM Estimation - we estimate current BPM by looking at the
+		weighted average of particles.
+
+	\item Resampling - particles with the lowest weights are redistributed
+		to more likely states.
+\end{enumerate}
+
+This approach improved on JOSS, claiming to provide 8.6\% better estimation
+accuracy, and 20 times faster performance. However, it does require a higher
+sampling rate than JOSS.
+
+\subsection{AS-LMS}
+
+Adaptive step-size least mean sqaures (AS-LMS) \cite{Ram12}<++> 
+
+
+
 \chapter{Implementation}
 
 \section{Gathering Data}
@@ -506,57 +713,20 @@ time difference around the lower resolution peak to find the actual peak.
 \end{figure}
 
 The algorithm I designed takes two parameters: step size (\emph{g}) and
-correct range (\emph{r}). Step size is the resolution of the initial scan, so the
-higher it is the more likely we are to find the peak but the longer the
+correct range (\emph{r}). Step size is the number of samples we skip in the initial scan, so the
+lower it is the more likely we are to find the peak but the longer the
 algorithm takes. Correct range gives the range of the time period we want to
 scan once we have found an initial peak, in order to find the actual peak.
 
+In Section \ref{section:evaluate-sync} I found that a value of \(g=0.25\)s
+provides significantly better performance, but still finds the correct time
+difference for all recorded data.
+
 \section{Filtering}
 
-PPGs produce a large amount of noise from various sources:
-\begin{itemize}
-	\item Light pollution. Both DC and AC lights in the environment can
-		infiltrate the sensor, affecting the PPG signal \cite{kim15}.
-	\item Temperature. As temperature increases, so does the volume of
-		blood, which will be picked up by the PPG sensor 
-		\cite{shin16}.
-	\item Breathing. The change in pressure accosiated with respiration
-		causes variations in the flow of blood, and hence can be seen
-		by the PPG sensor \cite{allen02}.
-\end{itemize}
-
-In order to remove much of this noise, we can use filters to remove
-frequencies we know are irrelevant. We know the heartbeat can vary from 
-30 to 220 beats per minute, and hence we would like to disregard any noise 
-outside of this range. In this section, I will introduce the concept of 
-filters, and describe two filters useful for PPG signals.
-
-\begin{figure}[h!]
-	\centerline{\includegraphics[width=0.8\textwidth]{figs/filter.png}}
-\caption{Diagram showing filter characteristics}
-\label{fig:filterdiag}
-\end{figure}
-
-Figure \ref{fig:filterdiag} displays an example filter magnitude response
-diagram. This plots the amount of gain applied to each frequency. A gain of
-zero means the signal is removed, a gain of one means the signal is unchanged.
-The characteristics displayed are as follows.
-
-The passband is the range of frequencies we would like to remain. In an ideal
-filter, there is no loss within the passband.
-
-Passband ripple describes the variation in amplitude \emph{within} the
-passband. An ideal filter will have no passband filter, such that all
-frequencies within the passband are permitted equally.
-
-The transition width is the frequency range between the start and stop band.
-Ideally, this is zero, such that frequencies outside of the passband are
-instantly reduced.
-
-The stopband is the range of frequencies we wish to remove. An ideal filter
-completely removes all frequencies within the stopband.
-
-The ideal filter, as described above, is impossible - and hence we have a
+In this section, I discuss the implementation of filters, as introduced in
+\ref{section:into-filters}. The ideal filter, as described above, is impossible - and 
+hence we have a
 variety of filters which compromise between the desirable characteristics.
 Following this, I detail two of these compromises - the Butterworth filter,
 and the Chebyshev filter.
@@ -586,25 +756,6 @@ Critical frequency gives the frequency at which we want gain to drop below
 point from which we wish to cut out noise. Figure \ref{fig:butterworth-order}
 uses critical frequencies 0.4 and 4 hz, which correspond to 24 and 240 bpm, a
 reasonable heart rate range.
-
-Type describes which frequencies we cut out. There are four different
-types of Butterworth filters, as follows:
-
-\begin{itemize}
-	\item Lowpass - allow frequencies below the critical frequency.
-
-	\item Highpass - allow frequencies above the critical frequency.
-
-	\item Bandpass - combination of lowpass and highpass - given two
-		frequencies, we want the passband to be between those
-		frequencies.
-
-	\item Bandstop - given two frequencies, put the stopband between them,
-		leaving the passband outside those frequencies.
-\end{itemize}
-
-We will be using a bandpass filter, as there is low and high frequency noise
-we wish to remove.
 
 \subsection{Chebyshev Filter}
 
@@ -880,7 +1031,7 @@ for each commenting on their validity and performance.
 
 \section{Gathering Data}
 
-\subsection{Synchronising Signals}
+\subsection{Synchronising Signals} \label{section:evaulate-sync}<++>
 
 In section \ref{section:sync}, I detail an algorithm which allows me to
 calculate the difference in start-times between different recordings from a
