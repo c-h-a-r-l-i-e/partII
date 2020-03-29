@@ -34,7 +34,7 @@ class Signal():
                     np.arange(0, self.vals.size, self.freq/freq),
                     np.arange(0, self.vals.size, 1),
                     self.vals)
-            return getSignal(resampled, self.freq)
+            return getSignal(resampled, freq)
 
         else:
             raise ValueError("Unknown resampling method {}".format(method))
@@ -64,4 +64,4 @@ class Signal():
 
     @property
     def values(self):
-        return self.values.copy()
+        return self.vals.copy()
