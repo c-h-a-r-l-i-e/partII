@@ -7,7 +7,7 @@ def getSignal(values, frequency):
 
 class Signal():
     def __init__(self, values, frequency):
-        self.vals = values
+        self.vals = values.copy()
         self.freq = frequency
 
     def getValues(self):
