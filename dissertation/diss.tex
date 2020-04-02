@@ -941,8 +941,11 @@ $V \in \mathbb{R} ^{M \times 4}$ models noise, and $X \in
 solutions for $X$, finding one is equivalent to finding the spectrum of each
 of the input signals.
 
-To calculate $X$, I make use of the MFOCUSS algorithm \cite{T}<++> TODO. The
-algorithm is provided by Zhang, written in MATLAB, so I made use of the MATLAB
+To calculate $X$, I make use of the MFOCUSS algorithm \cite{T}<++> TODO.
+MFOCUSS is designed to solve undetermined systems of measurement vectors, such
+as what we have. It is optimised to provide solutions where $X$ is sparse, .
+I used the
+algorithm provided by Zhang, written in MATLAB, so I made use of the MATLAB
 Engine API for Python in order to call the algorithm from my existing code.
 
 
