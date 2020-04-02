@@ -1,4 +1,4 @@
-package com.charliemaclean.heaphonerecorder
+package com.charliemaclean.ppgrecorder
 
 import android.app.Service
 import android.bluetooth.*
@@ -20,13 +20,14 @@ class HeartDeviceService: Service() {
 
     private val TAG: String = HeartDeviceService::class.simpleName.toString()
     private val UUID_HEART_RATE_MEASUREMENT: UUID = UUID.fromString(
-        GattAttributes.HEART_RATE_MEASUREMENT)
+        GattAttributes.HEART_RATE_MEASUREMENT
+    )
 
     private var mBluetoothManager: BluetoothManager? = null
     private var mBluetoothAdapter: BluetoothAdapter? = null
     private var mBluetoothGatt: BluetoothGatt? = null
 
-    private var mHeartRateRecorder : HeartRateRecorder? = null
+    private var mEarHRRecorder : EarHRRecorder? = null
 
     private val mGattCallback: BluetoothGattCallback = object: BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
@@ -54,6 +55,10 @@ class HeartDeviceService: Service() {
         }
     }
 
+    override fun onCreate() {
+        super.onCreate()
+    }
+
     private fun broadcastUpdate(action: String) {
         val intent: Intent = Intent(action)
         sendBroadcast(intent)
@@ -71,7 +76,7 @@ class HeartDeviceService: Service() {
             }
             val heartRate: Int = characteristic.getIntValue(format, 1)
             Log.d(TAG, "Received heart rate $heartRate")
-            mHeartRateRecorder?.newReading(heartRate)
+            mEarHRRecorder?.newReading(heartRate)
         }
     }
 
@@ -182,7 +187,7 @@ class HeartDeviceService: Service() {
             return false
         }
 
-        mHeartRateRecorder = HeartRateRecorder()
+        mEarHRRecorder = EarHRRecorder()
 
         signUpHeartRate(true)
         Log.d(TAG, "Trying to start a new recording.")
@@ -212,7 +217,7 @@ class HeartDeviceService: Service() {
             }
         }
 
-        mHeartRateRecorder?.save(directory, listener)
+        mEarHRRecorder?.save(directory, listener)
 
         return true
     }

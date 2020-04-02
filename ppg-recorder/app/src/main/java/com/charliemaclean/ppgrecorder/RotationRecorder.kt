@@ -7,7 +7,7 @@ import com.opencsv.CSVWriter
 import java.util.*
 import kotlin.concurrent.thread
 
-class RotationListener : SensorListener {
+class RotationRecorder : SensorRecorder {
     private var recording : ArrayList<Pair<Long, Triple<Float,Float,Float>>> = arrayListOf()
     override fun onAccuracyChanged(sensor: Sensor, value: Int) {
     }

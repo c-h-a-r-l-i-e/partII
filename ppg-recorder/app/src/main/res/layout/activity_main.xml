@@ -16,7 +16,7 @@
 
         <Space
             android:layout_width="match_parent"
-            android:layout_height="@dimen/screen_percentage_15" />
+            android:layout_height="@dimen/screen_percentage_05" />
 
         <TextView
             android:id="@+id/text"
@@ -24,11 +24,11 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:text="@string/ppg_title"
-            android:textSize="24sp" />
+            android:textSize="14sp" />
 
         <Space
             android:layout_width="match_parent"
-            android:layout_height="@dimen/screen_percentage_10" />
+            android:layout_height="@dimen/screen_percentage_05" />
 
         <Button
             android:id="@+id/button_startstop"
@@ -44,16 +44,31 @@
 
         <Space
             android:layout_width="match_parent"
-            android:layout_height="@dimen/screen_percentage_10" />
+            android:layout_height="@dimen/screen_percentage_05" />
 
         <Button
             android:id="@+id/button_sync"
-            style="@android:style/Widget.DeviceDefault.Button.Small"
+            style="Android:style.ButtonColo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:onClick="onSyncClick"
             android:text="@string/sync" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/screen_percentage_05" />
+
+        <TextView
+            android:id="@+id/ear_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/ear_disabled"
+            android:textAlignment="center"
+            android:textAllCaps="false"
+            android:textAppearance="@android:style/TextAppearance.Material.Body1"
+            android:textSize="14sp" />
     </LinearLayout>
 
 </androidx.wear.widget.BoxInsetLayout>

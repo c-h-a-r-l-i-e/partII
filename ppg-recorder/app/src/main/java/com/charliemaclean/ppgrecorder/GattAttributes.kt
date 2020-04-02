@@ -1,4 +1,4 @@
-package com.charliemaclean.heaphonerecorder
+package com.charliemaclean.ppgrecorder
 
 import java.util.*
 

@@ -1,11 +1,10 @@
-package com.charliemaclean.heaphonerecorder
+package com.charliemaclean.ppgrecorder
 
-import com.charliemaclean.ppgrecorder.SaveListener
 import java.io.File
 import com.opencsv.CSVWriter
 import kotlin.concurrent.thread
 
-class HeartRateRecorder() {
+class EarHRRecorder() {
     private var recording: ArrayList<Pair<Long, Int>> = arrayListOf()
 
     /**

@@ -7,7 +7,8 @@ import com.opencsv.CSVWriter
 import java.util.*
 import kotlin.concurrent.thread
 
-class PpgListener : SensorListener {
+class PpgRecorder : SensorRecorder {
+
     private var recording : ArrayList<Pair<Long, Triple<Float,Float,Float>>> = arrayListOf()
     override fun onAccuracyChanged(sensor: Sensor, value: Int) {
     }

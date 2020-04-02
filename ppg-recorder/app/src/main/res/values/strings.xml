@@ -10,4 +10,7 @@
     <string name="saving">Saving…</string>
     <string name="ppg_title">PPG Recorder</string>
     <string name="sync">Sync</string>
+    <string name="ear_connected">EAR Connected</string>
+    <string name="ear_disconnected">EAR Disconnected</string>
+    <string name="ear_disabled">EAR Disabled</string>
 </resources>
