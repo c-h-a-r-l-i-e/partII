@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 PLOTTING = False
 
 
-def get_ecg_hr(signal, ave_size = 15):
+def get_ecg_hr(signal, ave_size = 30):
     """
     Get a numpy array containing the second by second HR value from the signal, based on averaging
     over the last ave_size seconds.

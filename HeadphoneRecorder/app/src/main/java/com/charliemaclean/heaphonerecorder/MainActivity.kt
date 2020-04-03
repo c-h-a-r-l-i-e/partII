@@ -35,8 +35,6 @@ class MainActivity : Activity() {
     private var mRecordingStarted: Boolean = false
     private var mConnected: Boolean = false
 
-    private val REQUEST_ENABLE_BT = 1
-
     // Set up the formatters used to store the data. The data will be stored under directory
     // recordings/[date]/[time]
     private val dateFormatter: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
@@ -221,22 +219,7 @@ class MainActivity : Activity() {
             }
 
         if (!found) {
-            if (mBluetoothAdapter?.isEnabled == false) {
-                val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
-            }
-
-            val heartDeviceScan = mBluetoothAdapter?.let { HeartDeviceScan(it) }
-
-            val heartDeviceScanListener = object : HeartDeviceScanListener() {
-                override fun onDeviceFound(device: BluetoothDevice) {
-                    mDevice = device
-                    deviceFound()
-                }
-            }
-
-            Log.d(TAG, "Starting scan")
-            heartDeviceScan?.startScan(heartDeviceScanListener)
+            Log.d(TAG, "Device not found")
         }
     }
 

@@ -75,3 +75,18 @@ class WatchData:
         # Calculate frequency in hz
         freq = time.size / ((time[time.size-1] - time[0]) / 1000)
         return data.getSignal(signal, freq)
+
+    """
+    Return the heart-rate signal as a signal object
+    also return the accuracy integers as a signal object
+    """
+    def getHR(self):
+        df = pandas.read_csv(os.path.join(self.directory, "hr.csv"))
+        hr = df['value'].to_numpy()
+        accuracy = df['accuracy'].to_numpy()
+        time = df['time'].to_numpy()
+
+        # Calculate frequency in hz
+        freq = 1
+        return data.getSignal(hr, freq), data.getSignal(accuracy, freq)
+

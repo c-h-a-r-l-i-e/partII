@@ -10,6 +10,37 @@
 \usepackage{csvsimple}
 \usepackage{longtable}
 \usepackage{amssymb}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Code style
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    xleftmargin=9pt,
+    xrightmargin=9pt,
+    frame=lines
+}
+
+\lstset{style=mystyle}
+
 
 
 \raggedbottom                           % try to avoid widows and orphans
@@ -947,6 +978,13 @@ as what we have. It is optimised to provide solutions where $X$ is sparse, .
 I used the
 algorithm provided by Zhang, written in MATLAB, so I made use of the MATLAB
 Engine API for Python in order to call the algorithm from my existing code.
+
+\begin{lstlisting}[language=Python]
+test=1
+def test():
+	print("hi")
+
+\end{lstlisting}
 
 
 \section{Earbuds}

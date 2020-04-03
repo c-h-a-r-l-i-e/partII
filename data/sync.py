@@ -393,6 +393,25 @@ class Sync:
         synced = self.crop(data.getSignal(accValues, accFreq))
         return synced
 
+    """
+    Return the synced heart-rate of the wristwatch
+    """
+    def getSyncedHR(self):
+        hr, accuracy = self.watchData.getHR()
+
+        time_diff = self.getTimeDifference()
+        delta = int(abs(time_diff) * hr.frequency)
+
+        if time_diff < 0:
+            hr = hr[delta:]
+
+        hr = self.crop(hr)
+        return hr
+
+    @property
+    def hr(self):
+        return self.getSyncedHR()
+
 
 def plotCrossCorrelation(data):
     watchCorrelation = np.abs(data.getCrossCorrelation(watchFirst=True))

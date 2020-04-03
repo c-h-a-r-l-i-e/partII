@@ -8,15 +8,21 @@ import os
 import data
 
 class EarbudData:
-    def __init__(self, directory):
+    def __init__(self, directory, old_style = False):
+        """
+        old_style means ear recordings are in their own directory, with new 
+        style, they're bundled in the watch files
+        """
         if not os.path.isdir(directory):
             raise IOError("Directory {} does not exist".format(directory))
         self.directory = directory
+        self.old_style = old_style
+        self.file_name = "hr.csv" if old_style else "ear.csv"
 
 
     @property
     def times(self):
-        df = pandas.read_csv(os.path.join(self.directory, "hr.csv"))
+        df = pandas.read_csv(os.path.join(self.directory, self.file_name))
         time = df['time'].to_numpy()
         return time
     
@@ -25,7 +31,7 @@ class EarbudData:
         """
         Get heart-rate as a start time and a numpy array of the heart-rate
         """
-        df = pandas.read_csv(os.path.join(self.directory, "hr.csv"))
+        df = pandas.read_csv(os.path.join(self.directory, self.file_name))
         hr = df['value'].to_numpy()
         time = df['time'].to_numpy()
 
@@ -37,13 +43,35 @@ class EarbudData:
 
 
 class Sync(sync.Sync):
-    def __init__(self, ecgFile, watchDirectory, earbudDirectory):
-        self.ear_data = EarbudData(earbudDirectory)
+    def __init__(self, ecgFile, watchDirectory, earbudDirectory=None):
+        """
+        Parameters
+        ------------------
+         - earbudDirectory = None means the ear files are in the watch directory
+         - hr - True if using the HR, false if using PPG
+        """
+        if earbudDirectory is None:
+            self.ear_data = EarbudData(watchDirectory,False)
+        else:
+            self.ear_data = EarbudData(earbudDirectory,True)
+
         super().__init__(ecgFile, watchDirectory)
         super().setStartCrop(0)
         super().setEndCrop(1)
-        self._ecg, self._ppg, self._ear = self.get_synced_signals()
+        try:
+            super().getSyncedPPG()
+            self._ecg, self._ppg, self._ear = self.get_synced_signals()
+            self._hr = None
 
+        except:
+            # TODO: actually sync
+            self._ecg = self.getSyncedECG()
+            self._ear = data.getSignal(self.ear_data.get_hr()[1], 1)
+            self._hr = self.getSyncedHR()
+            self._ppg = None
+        
+
+    
 
     @property
     def ecg(self):
@@ -127,18 +155,19 @@ def plot_earbud(hr, label="Earbuds"):
     plt.plot(hr, label=label)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        raise ValueError("Expected usage: sync.py ecgFile watchDir earbudDir")
-
-
+    if len(sys.argv) == 4:
+        earbud_dir = sys.argv[3]
+    elif len(sys.argv) == 3:
+        earbud_dir = None
+    else:
+        raise ValueError("Expected usage: sync.py ecgFile watchDir (earbudDir)")
 
     ecgfile = sys.argv[1]
     watchdir= sys.argv[2]
-    earbud_dir = sys.argv[3]
     sync = Sync(ecgfile, watchdir, earbud_dir)
     sync.ear.plot("Earbud")
+    sync.hr.plot("Watch HR")
     plot_ecg(sync.ecg)
-    plot_ppg(sync.ppg)
     plt.legend()
     plt.show()
 
