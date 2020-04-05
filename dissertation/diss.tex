@@ -2,6 +2,7 @@
 \documentclass[12pt,a4paper,twoside,openright]{report}
 \usepackage[pdfborder={0 0 0}]{hyperref}    % turns references into hyperlinks
 \usepackage[margin=25mm]{geometry}  % adjusts page layout
+\usepackage[dvipsnames]{xcolor}
 \usepackage{graphicx}  % allows inclusion of PDF, PNG and JPG images
 \usepackage{verbatim}
 \usepackage{pdfpages}
@@ -11,7 +12,6 @@
 \usepackage{longtable}
 \usepackage{amssymb}
 \usepackage{listings}
-\usepackage{xcolor}
 
 % Code style
 \definecolor{codegreen}{rgb}{0,0.6,0}
@@ -25,7 +25,7 @@
     keywordstyle=\color{magenta},
     numberstyle=\tiny\color{codegray},
     stringstyle=\color{codepurple},
-    basicstyle=\ttfamily\footnotesize,
+    basicstyle=\ttfamily\scriptsize,
     breakatwhitespace=false,         
     breaklines=true,                 
     captionpos=b,                    
@@ -39,9 +39,25 @@
     frame=lines
 }
 
+
+\lstdefinelanguage{Kotlin}{
+  comment=[l]{//},
+  commentstyle={\color{gray}\ttfamily},
+  emph={delegate, filter, first, firstOrNull, forEach, lazy, map, mapNotNull, println, return@},
+  emphstyle={\color{OrangeRed}},
+  identifierstyle=\color{black},
+  keywords={abstract, actual, as, as?, break, by, class, companion, continue, data, do, dynamic, else, enum, expect, false, final, for, fun, get, if, import, in, interface, internal, is, null, object, override, package, private, public, return, set, super, suspend, this, throw, true, try, typealias, val, var, vararg, when, where, while},
+  keywordstyle={\color{NavyBlue}\bfseries},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[s]{"""*}{*"""},
+  ndkeywords={@Deprecated, @JvmField, @JvmName, @JvmOverloads, @JvmStatic, @JvmSynthetic, Array, Byte, Double, Float, Int, Integer, Iterable, Long, Runnable, Short, String},
+  ndkeywordstyle={\color{BurntOrange}\bfseries},
+  sensitive=true,
+  stringstyle={\color{ForestGreen}\ttfamily},
+}
+
 \lstset{style=mystyle}
-
-
 
 \raggedbottom                           % try to avoid widows and orphans
 \sloppy
@@ -749,7 +765,62 @@ The algorithm I designed takes two parameters: step size (\emph{g}) and
 correct range (\emph{r}). Step size is the number of samples we skip in the initial scan, so the
 lower it is the more likely we are to find the peak but the longer the
 algorithm takes. Correct range gives the range of the time period we want to
-scan once we have found an initial peak, in order to find the actual peak.
+scan once we have found an initial peak, in order to find the actual peak. The
+code is included here:
+\begin{lstlisting}[language=Python]
+def fastCorrelate(f, g, freq, initTimeGap = 0.25, searchBound = 3):
+    """
+    Calculate cross correlation c of two numpy arrays, as defined by c[k] = sum_n (f[n+k] * g[n])
+    using optimized method which does an initial correlation at a lower resolution and then hones in on the solution.
+
+    Parameters
+    ----------
+    f, g : numpy arrays
+        Input signals.
+
+    freq : float
+        The frequency of the signals.
+
+    initTimeGap : float
+        Interval at which to perform correlation intially in seconds. 
+
+    searchBound : float
+        Bound wihtin which we search for the solution once we have made an initial pass.
+        
+
+    Returns
+    -------
+    k : int
+        k is the time at which we think the signals are synced, given in terms of the number of samples through f we are.
+        i.e. the value of k which maximizes c[k]
+
+    v : float
+        the value of cross correlation at that point (c[k])
+    """
+    if f.size < g.size:
+        raise ValueError("Array f must be larger than g")
+
+    length = f.size - g.size
+
+    gap = int(initTimeGap * freq)
+
+    c = np.zeros((length))
+    for k in range(0, length, gap):
+        c[k] = np.sum(f[k : k + g.size] * g)
+
+    maxPos = np.argmax(c)
+    bound = searchBound * freq
+    lowerBound = max(maxPos - bound, 0)
+    upperBound = min(maxPos + bound, length)
+    for k in range(lowerBound, upperBound, 1):
+        c[k] = np.sum(f[k : k + g.size] * g)
+
+
+    k = np.argmax(c)
+    v = c[k]
+
+    return (k, v)
+\end{lstlisting}
 
 In Section \ref{section:evaluate-sync} I found that a value of \(g=0.25\)s
 provides significantly better performance, but still finds the correct time
@@ -947,13 +1018,15 @@ heart-rate (in the range 20-240 bpm), and have the smallest standard deviation.
 So, we have developed an algorithm that attempts to find a heart-beat with
 regular peak-peak intervals, and is within a reasonable range.
 
-\subsection{Joint Sparse Spectrum Reconstruction}
+\section{Joint Sparse Spectrum Reconstruction}
 
 So far all techniques I used to calculate heart-rate have worked in the time
 domain, so now I'll look at using the frequency domain. I developed a
 technique based on JOSS \cite{Zhang15-2}, which I discussed in the Section
 \ref{joss-intro}. The algorithm is composed of two main stages, joint sparse
-spectrum reconstruction and spectral peak tracking.
+spectrum reconstruction and spectral peak tracking. 
+
+\subsection{Joint Sparse Spectrum Reconstruction}
 
 Joint sparse spectrum reconstruction is a method to estimate the spectrums of
 multichannel signals. The problem can be summarised as solving the equation 
@@ -977,15 +1050,115 @@ MFOCUSS is designed to solve undetermined systems of measurement vectors, such
 as what we have. It is optimised to provide solutions where $X$ is sparse, .
 I used the
 algorithm provided by Zhang, written in MATLAB, so I made use of the MATLAB
-Engine API for Python in order to call the algorithm from my existing code.
+Engine API for Python in order to call the algorithm from my existing code. The 
+following code shows my SSR function:
 
 \begin{lstlisting}[language=Python]
-test=1
-def test():
-	print("hi")
+def ssr(y, freq, N, eng):
+    """
+    Run sparse spectrum reconstruction using y sampled 
+    at frequency freq, and a Fourier matrix to produce N 
+    frequency taps. eng is the MATLAB engine used
+    to run the MFOCUSS algorithm.
+    """
+    M = np.max(y.shape)
 
+    # Make the Fourier matrix
+    phi = np.zeros((M, N), dtype=complex)
+    complex_factor = 1j * 2 * np.pi / N 
+    for m in range(0, M): 
+        for n in range(0, N): 
+            phi[m,n] = np.exp(complex_factor * m * n)
+
+    Phi = matlab.double(phi.tolist(), is_complex=True)
+    Y = matlab.double(y.tolist())
+
+    X = eng.MFOCUSS(Phi, Y, 1e-10, 'MAX_ITERS', 4)
+    x = np.array(X)
+    x = np.abs(x) ** 2
+
+
+    return x
 \end{lstlisting}
 
+Now we have calculated the spectrums of the PPG signal and the noise, we can
+remove noise from the signal, which is much easier in the frequency domain -
+we simply subtract the spectrum of the motion noise from the spectrum of the
+PPG noise, in order to reconstruct a clean spectrum. The advantage of using
+the MFOCUSS algorithm and calculating the spectrums together is that the
+frequency bins are much more likely to overlap between the accelerometer and
+the PPG, where there is motion noise. 
+
+The paper which describes JOSS recommends, for each frequency in the spectrum,
+subtracting the maximum of all the accelerometer frequency bins from the PPG's
+frequency bin. Additionally, it reccommends settting all frequency bins below 
+the maximum frequency bin divided by four to zero, in order to sparsify the array.
+This is the relevant code:
+
+\begin{lstlisting}[language=Python]
+aggression = 0.99
+accel_max = np.zeros((N))
+signal_ssr = spectra[:,0]
+
+# Modify the SSR signal by subtracting the maximum acceleration in each bin
+for i in range(0, bpm.size):
+    # Max of acceleration at this frequency
+    accel_max[i] = np.max([spectra[i,1], spectra[i,2], spectra[i,3]])
+    signal_ssr[i] = signal_ssr[i] - aggression * accel_max[i]
+
+# Set all SSR bins lower than the maximum divided by 5 to 0
+max_bin = np.max(signal_ssr)
+signal_ssr[signal_ssr < max_bin / 4] = 0
+\end{lstlisting}
+
+So, now we have produced a spectrum of the PPG signal, with motion noise
+removed, by computing the spectrums simultaneously.
+
+\subsection{Spectral Peak Tracking}
+
+We now have a spectrum, so we need some way of calculating heart-rate from it.
+We could just select the largest peak in the spectrum, however this would be
+naive - some noise may not be removed, so we could get random peaks.
+Additionally, we know that heart-rate is relatively consistent so we can use
+the previous heart-rate calculation to estimate the next one. Spectral peak
+tracking helps to achieve this.
+
+My spectral peak tracking initializes the heart-rate by looking for the
+largest peak, as there will be little noise when the recording starts. Then,
+it tries to find peaks, first peaks that are less than 15bpm away, then peaks
+less than 25 bpm away. If no peaks are found, then the previously reported
+heart-rate is used again as the heart-rate is likely lost in noise. If there
+are multiple peaks, the algorithm takes the largest.
+
+To avoid the heart-rate getting stuck at one value, a validation step is
+included. If the bpm reported is the same for more than 3 succesive runs, then
+validation is triggered. To validate, we return the closest peak to the latest
+recorded run, the code that finds this is below:
+
+\begin{lstlisting}[language=Python]
+def discover_peak(spectrum, prev_loc):
+    """
+    Find the closest peak in spectrum to the peak at prev_loc.
+    """
+    rng = np.arange(40, 220)
+    N = spectrum.shape[0]
+
+    # find peaks in range
+    mask = np.zeros((N,))
+    mask[rng] = 1
+    filtered = (spectrum * mask).flatten()
+    locs, _ = scipy.signal.find_peaks(filtered)
+
+    if locs.size == 0:
+        return prev_loc
+
+    # find closest peak to prev_loc
+    dist = np.abs(prev_loc - locs)
+    index = np.argmin(dist)
+    loc = locs[index]
+
+    return loc
+\end{lstlisting}
 
 \section{Earbuds}
 
@@ -994,16 +1167,14 @@ device: earbuds. In theory, these devices are less effected by motion noise
 as they are not affected by arm movement. Additionally, the ear has a rich set
 of veins from which we can gather PPG. For the purposes of this project I used
 a set of Jabra elite sport earbuds, which have a PPG sensor under the right
-bud - see figure \ref{fig:jabra}.
+bud - see figure \ref{fig:jabra}. I connected the earbuds to the watch, and
+the following details the process of collecting data from the earbuds.
 
 \begin{figure}[tbh]
 	\centerline{\includegraphics[width=0.4\textwidth]{figs/jabra.png}}
 	\caption{Positioning of the PPG sensor on Jabra elite sport earbuds.}
 	\label{fig:jabra}
 \end{figure}
-
-In this section, I discuss how I obtained data from the earbuds, and then how
-I processed the data I received. 
 
 \subsection{Gathering data}
 
@@ -1018,7 +1189,7 @@ with which data values are transported by Bluetooth LE.
 our case the earbuds are a GATT server.
 
 \paragraph{GATT Client} is a device which requests information from a GATT
-server, in our case a mobile phone.
+server, in our case a smart watch.
 
 \paragraph{Characteristics} are single data points, for example in our case a
 heart-rate integer. Characteristics also have a number of descriptors
@@ -1033,15 +1204,83 @@ to indicate that the client would like to receive updates when a certain
 characteristic is changed. This is how frequently changing values are passed
 over Bluetooth LE, as it is more power efficient than having the client
 periodically request updates.
+\\
+\\
 
 Figure \ref{fig:gatt-flow} shows the flow I aimed to introduce in my data collection program to run
-on the phone. 
+on the watch. In Kotlin, I iterate through the connected Bluetooth devices,
+until I find the earbuds, and then the app connects to the earbud's GATT
+server. Once connected 
+to the GATT server, the app
+requests notifications for the heart-rate characteristic. These
+characteristics are then periodically sent to the watch, where they are
+recorded.
 
 \begin{figure}[tbh]
 	\centerline{\includegraphics[width=0.8\textwidth]{figs/gatt-flow.png}}
-	\caption{Retrieving Data from Headphones}
+	\caption{Retrieving Data from Earbuds.}
 	\label{fig:gatt-flow}
 \end{figure}
+
+\subsubsection{Android Services}
+
+In order to avoid the data being lost when the application leaves the screen,
+I implemented all of the Bluetooth functionality within a service. A service
+allows code to run when the application isn't in focus. It does add some
+complexity into development though, as I describe here.
+
+When a service is created, it is bound to the application which starts it.
+When a service is bound, the application can send requests, and receive
+updates from it - as I'll discuss further on. However, when an application is
+out of focus, services bound to it are destroyed, and hence our service must
+be unbound before this happens. Then, when our application comes back into
+focus, we rebind it, see the code below:
+
+\begin{lstlisting}[language=Kotlin]
+override fun onStart() {
+    doBindService()
+    super.onStart()
+}
+
+override fun onStop() {
+    doUnbindService()
+    super.onStop()
+}
+\end{lstlisting}
+
+In order to receive updates from the service, we must use intents, which are
+the way Android allows different applications to communicate. 
+We create a \emph{BroadcastReceiver}
+object in \emph{MainActivity}, which deals with intents we might receive from
+the service - the intents it may send include device connected/disconnected
+and an update to say the recordings have successfully been saved. 
+
+\begin{lstlisting}[language=Kotlin]
+// Handles various events fired by the Service.
+// ACTION_GATT_CONNECTED: connected to a GATT server.
+// ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
+// ACTION_SAVED: heart-rate data has been saved
+private val mGattUpdateReceiver = object : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        val action = intent.action
+        when {
+            HeartDeviceService.ACTION_GATT_CONNECTED.equals(action) -> {
+                mConnected = true
+                showConnected(mConnected)
+            }
+            HeartDeviceService.ACTION_GATT_DISCONNECTED.equals(action) -> {
+                mConnected = false
+                showConnected(mConnected)
+            }
+            HeartDeviceService.ACTION_SAVED.equals(action) -> {
+                mRecordingStarted = false
+                mSaveListener.onSave()
+            }
+        }
+    }
+}
+\end{lstlisting}
+
 
 \subsection{Sensor Fusion}
 
