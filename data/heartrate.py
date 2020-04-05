@@ -12,21 +12,26 @@ import matplotlib.pyplot as plt
 PLOTTING = False
 
 
-def get_ecg_hr(signal, ave_size = 30):
+def get_ecg_hr(signal, ave_size = 16):
     """
     Get a numpy array containing the second by second HR value from the signal, based on averaging
     over the last ave_size seconds.
     """
     vals = signal.getValues()
     freq = signal.getFrequency()
+
+
     length = int(vals.size / freq)
     hr = np.zeros(length)
 
     for i in range(ave_size, length - 1, 1):
         window = vals[freq * (i - ave_size) : freq * i]
         filtered = hp.remove_baseline_wander(window, freq)
-        wd, m = hp.process(hp.scale_data(filtered), freq, bpmmax=220)
+
+        wd, m = hp.process(hp.scale_data(filtered), freq, bpmmax=220, windowsize=0.1)
         hr[i] = m["bpm"]
+        if hr[i] > 210 and PLOTTING:
+            hp.plotter(wd, m)
     
     for i in range(ave_size):
         hr[i] = hr[ave_size]

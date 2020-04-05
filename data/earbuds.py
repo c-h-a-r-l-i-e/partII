@@ -71,8 +71,6 @@ class Sync(sync.Sync):
             self._ppg = None
         
 
-    
-
     @property
     def ecg(self):
         return self._ecg
@@ -139,7 +137,6 @@ class Sync(sync.Sync):
 
         return ecg, ppg, ear
 
-        
 
 
 def plot_ppg(signal, label="PPG"):
@@ -148,7 +145,7 @@ def plot_ppg(signal, label="PPG"):
 
 
 def plot_ecg(signal, label="ECG"):
-    hr = heartrate.get_ecg_hr(signal)
+    hr = heartrate.get_ecg_hr(signal, ave_size=15)
     plt.plot(np.arange(0, hr.size, 1), hr, label=label)
     
 def plot_earbud(hr, label="Earbuds"):
@@ -165,9 +162,9 @@ if __name__ == "__main__":
     ecgfile = sys.argv[1]
     watchdir= sys.argv[2]
     sync = Sync(ecgfile, watchdir, earbud_dir)
+    plot_ecg(sync.ecg)
     sync.ear.plot("Earbud")
     sync.hr.plot("Watch HR")
-    plot_ecg(sync.ecg)
     plt.legend()
     plt.show()
 

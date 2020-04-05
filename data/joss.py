@@ -169,25 +169,6 @@ def ssr(y, freq, N, eng):
     
     return x
 
-
-def focuss(y, Phi):
-    iters = 2
-    N = Phi.shape[1]
-    x = np.ones((N, 1))
-
-    for i in range(0, iters):
-        W_pk = np.diagflat(x)
-
-        # Moore-Penrose inverse of Phi * W_pk
-        m = np.linalg.pinv(np.matmul(Phi, W_pk))
-
-        q_k = np.matmul(m, y)
-        x = np.matmul(W_pk, q_k)
-
-    s = np.abs(x) ** 2
-
-    return s
-
     
 def joss_spt(spectrum, freq, prev_loc, prev_bpm, trap_count):
     deltas = [15, 25]
