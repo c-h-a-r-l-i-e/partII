@@ -122,6 +122,10 @@ def get_rate_min_sd(signal):
     rate = peaks.size / (signal.getValues().size / signal.getFrequency()) * 60
     return rate
 
+def get_rate_naive(signal):
+    peaks = find_peaks(signal)
+    rate = peaks.size / (signal.getValues().size / signal.getFrequency()) * 60
+    return rate
 
 def plot_peaks_min_sd(signal): 
     peaks = find_peaks_min_sd(signal)
@@ -130,11 +134,11 @@ def plot_peaks_min_sd(signal):
     plt.show()
 
 
-def plot_peaks(peaks, signal, color="red"):
+def plot_peaks(peaks, signal, label):
     values = signal.getValues()
     freq = signal.getFrequency()
     xs = np.arange(0, values.size/freq, 1/freq)
-    plt.plot(xs[peaks], values[peaks], "x")
+    plt.plot(xs[peaks], values[peaks], "x", label=label)
 
 def get_rate(peaks, signal):
     freq = signal.getFrequency()
@@ -164,17 +168,28 @@ if __name__ == "__main__":
 
     synced = sync.getSync(ecgFile, watchDirectory)
 
-    ecg, ppg = synced.getSyncedSignals()
-    lowerBPM = 40
-    upperBPM = 240
-    butterFiltered = filtering.butter_bandpass_filter(
-        ppg,lowerBPM/60, upperBPM/60).normalize()
+    ecg, whole_ppg = synced.getSyncedSignals()
+    
+    for i in range(10, 20, 1):
+        ppg = whole_ppg[i * 20 * 20 : (i * 20 + 20) * 20]
 
-    peaks = find_peaks_min_sd(butterFiltered)
-    rate = get_rate(peaks, butterFiltered)
-    butterFiltered.plot()
-    rate.plot()
-    plt.show()
+        lowerBPM = 40
+        upperBPM = 240
+        #butterFiltered = filtering.butter_bandpass_filter(
+        #    ppg,lowerBPM/60, upperBPM/60, order=4).normalize()
+
+        plt.subplot(121)
+        plt.title("Local Maxima Peaks")
+        local_peaks = find_peaks(ppg)
+        plot_peaks(local_peaks, ppg, label="Local Maxima Peaks")
+        ppg.plot("PPG Signal")
+
+        plt.subplot(122)
+        plt.title("Standard Dev. Min. Peaks")
+        sd_peaks = find_peaks_min_sd(ppg)
+        plot_peaks(sd_peaks, ppg, label="Standard Dev. Min. Peaks")
+        ppg.plot("PPG Signal")
+        plt.show()
 
     butterPeaks = find_peaks(butterFiltered)
     #butterPeaksCwt = find_peaks_cwt(butterFiltered)

@@ -28,7 +28,13 @@ validData = [
         {'ecg': 'ecg-files/DATA/20200118/14-11-26.EDF', 'watch': 'files/recordings/2020-01-18/14.23.58.924/', 'noise':NOISE_MEDIUM},
         {'ecg': 'ecg-files/DATA/20200228/18-13-02.EDF', 'watch': 'files/recordings/2020-02-28/18.20.12.094/', 'noise':NOISE_MEDIUM},
         {'ecg': 'ecg-files/DATA/20200228/18-25-25.EDF', 'watch': 'files/recordings/2020-02-28/18.33.06.101/', 'noise':NOISE_MEDIUM},
-        {'ecg': 'ecg-files/DATA/20200228/18-36-47.EDF', 'watch': 'files/recordings/2020-02-28/18.44.02.330/', 'noise':NOISE_HIGH}
+        {'ecg': 'ecg-files/DATA/20200228/18-36-47.EDF', 'watch': 'files/recordings/2020-02-28/18.44.02.330/', 'noise':NOISE_HIGH},
+
+        {'ecg': 'ecg-files/DATA/20200406/10-53-28.EDF', 'watch': 'files/recordings/2020-04-06/11.15.12.951/', 'noise':NOISE_LOW},
+        {'ecg': 'ecg-files/DATA/20200406/11-15-05.EDF', 'watch': 'files/recordings/2020-04-06/11.27.51.039/', 'noise':NOISE_LOW},
+        {'ecg': 'ecg-files/DATA/20200406/12-10-13.EDF', 'watch': 'files/recordings/2020-04-06/12.32.18.977/', 'noise':NOISE_LOW},
+        {'ecg': 'ecg-files/DATA/20200406/12-32-33.EDF', 'watch': 'files/recordings/2020-04-06/12.51.24.594/', 'noise':NOISE_LOW},
+        {'ecg': 'ecg-files/DATA/20200406/12-51-20.EDF', 'watch': 'files/recordings/2020-04-06/13.13.26.442/', 'noise':NOISE_LOW}
         ]
 
 

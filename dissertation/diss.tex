@@ -315,9 +315,19 @@ This is a useful tool for analysing signals, giving us the ability to detect
 where the frequency corresponding to heart-rate is, and additionally detect
 what frequencies are noise in a signal.
 
-One approach used to calculate a spectrum is known as a fast Fourier transform
-(FFT). A FFT is a very fast algorithm which expresses a signal as a sum of
-periodic components.
+To demonstrate a spectrum, I produced a signal of two sine waves, with
+frequency 10 hz
+and 30 hz, and some random noise. The spectrum this produced is shown in 
+Figure \ref{fig:example-spectrum}, it shows the presence of the two sine
+waves, and the random noise is shown by the random baseline variation.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.5\textwidth]{figs/example-spectrum.png}
+	\caption{An example spectrum.}
+	\label{fig:example-spectrum}
+\end{figure}
+
 
 
 \section{Current Algorithms}
@@ -580,7 +590,8 @@ trigger the sending of files to the server.
 
 Then I added the logic to be triggered when the button is pressed. This logic
 iterates through every file in the recordings directory and performs a HTTP
-PUT request with them. I used\ldots
+PUT request with them. I used the \emph{OkHttpClient} library in order to
+send these PUT requests.
 
 \subsection{Raspberry Pi Access Point}
 
@@ -956,6 +967,49 @@ E(y^2)[n]\]
 where \(w_n\) is the \(n\)th filter weight, and \(\nabla E(y^2)[n]\) is the
 \(n\)th weight gradient.
 
+The LMS code I produced is as follows:
+
+\begin{lstlisting}[language=Python]
+def lms(ppg, accel):
+  """ 
+  Run a least mean squares adaptive filter to remove noise from the signal
+  that we know is correlation to the reference signal.
+
+  Inputs
+  ------------
+   - ppg - the signal we want to remove noise from
+   - accel - a signal we think is correlated with the noise
+
+  Outputs
+  ------------
+   - filtered - the signal with noise removed
+  """
+
+  N = ppg.size          # Size of PPG signal
+  K = 15                # Number of filter taps
+  step = 0.001          # Step size for LMS
+
+  # Preprocessing
+  freq = ppg.getFrequency()
+  accel = accel.resample(freq)
+  accel = accel.crop(N)
+
+  w = np.zeros(K)      # Initial filter
+  e = np.zeros(N-K)    # Initial error
+
+  for n in range(0, N-K):
+    acceln = accel[n+K:n:-1]
+    en = ppg[n+K] - np.dot(acceln, w)    
+    w = w + step * en * acceln
+    e[n] = en
+
+
+  motion_noise = signal.convolve(accel, w)
+  estimated_heart = ppg - motionNoise
+
+  return estimated_heart
+\end{lstlisting}
+
 Step size must be chosen very carefully, as if it is too large there is a risk
 of LMS missing the solution as it overcompensates for the gradient. If it is
 too small, then the algorithm becomes too expensive as we need many more
@@ -1297,19 +1351,16 @@ out we guide the output using the less accurate PPG from the wrist-watch.
 
 \subsection{Kalman Filter}
 
-TODO: adapt this
-
-The Kalman filter is an algorithm which can compensate for noisy and
-inaccurate measurements such as what we get from the PPG signal. It consists
-of two phases:
+A Kalman filter can be used to estimate the value of an unknown variable, by
+producing a probability distribution for that variable that is updated over
+time.
+It consists of two phases:
 \begin{enumerate}
 	\item Prediction step - predict the current heart rate based on the
-		previous heart rate, and some model. In this step we can
-		incorporate the accelerometer as a reasonable estimator for
-		the change in running effort.
+		previous heart-rate, and the readings from the watch PPG.
 
-	\item Update step - take the actual reading from the PPG signal and combine
-		with the output of the prediction step.
+	\item Update step - when we get a confirmed measurement from the
+		earbuds, we move the heart-rate to the earbud's estimation.
 \end{enumerate}
 
 The Kalman filter relies on modelling current heart-rate as a Gaussian
@@ -1320,6 +1371,11 @@ Kalman gain is the parameter used to weight the measurements against the
 prediction. A higher gain assigns more trust to the measurements, meaning the
 filter will respond quicker, a low gain produces more smoothing.
 
+The code for my Kalman filter is as follows:
+
+\begin{lstlisting}
+
+\end{lstlisting}<++>
 
 \chapter{Evaluation}
 
@@ -1699,10 +1755,35 @@ elsewhere, leaving a clean signal.
 For the clean data, I have recorded a section of data using the wristwatch and ECG
 where I do not move. I then pass it through a Butterworth filter to remove
 noise out of the valid range. I do not attempt to remove motion noise, as
-there should be none given the lack of movement.
+there should be minimal noise in this data.
 
 Finally I compare the result of the heart-rate calculation to the actual
 heart-rate measure provided by the ECG.
+
+\ldots TODO: compare time, show a plot
+
+In Figure \ref{fig:hrc-error} I plot the error and absolute error of both
+methods. The data clearly shows that standard deviation minimization is
+superior, providing a much lower average absolute error. We see that 90\% of
+the recorded errors are below 10bpm, whereas 90\% of local maxima calculated
+heart-rates are above 35bpm.
+
+
+\begin{figure}[tbh]
+	\centerline{\includegraphics[width=0.7\textwidth]{figs/peakfind.png}}
+	\caption{Comparison of LMS Error at Different Tap Numbers.}
+	\label{fig:hrc-error}
+\end{figure}
+
+The reason the errors differ so much can be seen in Figure \ref{}<++>
+
+\begin{figure}[tbh]
+	\centering
+	\includegraphics[width=0.7\textwidth]{figs/peak-comparison.png}
+	\caption{<+caption text+>}
+	\label{fig:<+label+>}
+\end{figure}<++>
+
 
 \section{Earbuds}
 
@@ -1733,6 +1814,16 @@ are rotated, the reported heart-rate drops to zero. This can be seen in Figure
 suddenly just drops to zero.
 
 \chapter{Conclusion}
+
+I have met all the success criteria set out in my project proposal.
+
+\paragraph{Summary}
+
+In this project I explored a few techniques which calculate heart-rate from
+the noisy signals coming from a smart-watch worn while running. To remove
+random noise not caused by motion, I experimented with band-pass filters. 
+
+\paragraph{Issues}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -23,25 +23,42 @@ def lms(ppg, accel):
   """
 
 
-  N = ppg.size
-  K = 1000  #Filter size
+  N = ppg.size          # Size of PPG signal
+  K = 15                # Number of filter taps
+  step = 0.001          # Step size for LMS
 
-  """
-  accel = np.random.randn(N)                 # Input to the filter
-  h = signal.firwin(K, 0.5)                  # FIR system to be identified
-  ppg = signal.convolve(accel, h)            # Target output signal
-  heart = 0.01 * np.random.randn(len(ppg))
-  ppg = ppg + heart # with added noise
-  """
-
-  # Since acceleration is being used to calcualte the filter, we need more of it, specifically
-  # we need (# ppg samples + filter size) acceleration samples.
+  # Preprocessing
   freq = ppg.getFrequency()
-  accelFrequency = freq 
   accel = accel.resample(freq)
   accel = accel.crop(N)
+
   accel = accel.getValues()
   ppg = ppg.getValues()
+
+  w = np.zeros(K)      # Initial filter
+  e = np.zeros(N-K)    # Initial error
+
+  for n in range(0, N-K):
+    acceln = accel[n+K:n:-1]
+    en = ppg[n+K] - np.dot(acceln, w)          
+    w = w + step * en * acceln
+
+    e[n] = en
+
+
+  motionNoise = signal.convolve(accel, w)
+  estimatedHeart = ppg - motionNoise
+
+  return data.getSignal(estimatedHeart, freq)
+
+
+
+  plt.figure()
+  plt.title("Estimated heart rate against actual heart rate")
+  plt.plot(estimatedHeart, label="estimated")
+  plt.legend()
+  plt.show()
+
 
   # t = ppg
   # x = accel
@@ -53,18 +70,8 @@ def lms(ppg, accel):
   plt.stem(h)
   """
 
-  step = 0.001
 
-  w = np.zeros(K)                        # Initial filter
-  e = np.zeros(N-K)
-
-  for n in range(0, N-K):
-    acceln = accel[n+K:n:-1]
-    en = ppg[n+K] - np.dot(acceln, w)          # Error
-    w = w + step * en * acceln
-
-    e[n] = en
-
+  if False:
     if (False and n % 50 == 0):
       plt.figure()
       plt.title('Estimated filter at iteration %d' % n)
@@ -82,18 +89,6 @@ def lms(ppg, accel):
   plt.title('Noise signal')
   plt.stem(noise)
   """
-
-  motionNoise = signal.convolve(accel, w)
-  estimatedHeart = ppg - motionNoise
-
-  plt.figure()
-  plt.title("Estimated heart rate against actual heart rate")
-  plt.plot(estimatedHeart, label="estimated")
-  plt.legend()
-  plt.show()
-
-  return data.getSignal(estimatedHeart, freq)
-
 
 
 """

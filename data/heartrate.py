@@ -38,7 +38,7 @@ def get_ecg_hr(signal, ave_size = 16):
 
     return hr
 
-def get_ppg_hr(signal, ave_size = 15):
+def get_ppg_hr(signal, ave_size = 30, method = 'sd'):
     vals = signal.getValues()
     freq = signal.getFrequency()
     length = int(vals.size / freq)
@@ -46,7 +46,13 @@ def get_ppg_hr(signal, ave_size = 15):
 
     for i in range(ave_size, length - 1, 1):
         window = vals[int(freq * (i - ave_size)) : int(freq * i)]
-        hr[i] = peakfind.get_rate_min_sd(data.getSignal(window, freq))
+        if method == 'sd':
+            hr[i] = peakfind.get_rate_min_sd(data.getSignal(window, freq))
+        elif method == 'naive':
+            hr[i] = peakfind.get_rate_naive(data.getSignal(window, freq))
+        else:
+            raise ValueError("Invalid argument for method, valid arguments are 'sd' or 'naive'")
+
     
     for i in range(ave_size):
         hr[i] = hr[ave_size]
@@ -54,7 +60,7 @@ def get_ppg_hr(signal, ave_size = 15):
     return hr
 
 
-if __name__ == "__main__":
+if False and __name__ == "__main__":
     if len(sys.argv) != 3:
         raise ValueError("Expected usage: heartrate.py",
                 "ecgFile watchDataDirectory")
@@ -204,4 +210,29 @@ def getPpgHR(signal, peaks, window):
 
     return heartrates
 
+
+def plot_ppg(signal, label="PPG", method="sd"):
+    signal = filtering.butter_bandpass_filter(signal, 20/60, 220/60, order=6)
+    hr = get_ppg_hr(signal, ave_size=30, method=method)
+    plt.plot(np.arange(0, hr.size, 1), hr, label=label)
+
+
+def plot_ecg(signal, label="ECG"):
+    hr = get_ecg_hr(signal, ave_size=15)
+    plt.plot(np.arange(0, hr.size, 1), hr, label=label)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        raise ValueError("Expected usage: heartrate.py ecgFile watchDir")
+
+    ecgfile = sys.argv[1]
+    watchdir= sys.argv[2]
+    sync = sync.Sync(ecgfile, watchdir)
+
+    plot_ecg(sync.getSyncedECG())
+    plot_ppg(sync.getSyncedPPG(), label="Naive PPG", method='naive')
+    plot_ppg(sync.getSyncedPPG(), label="SD Minimization PPG", method='sd')
+    plt.legend()
+    plt.show()
 

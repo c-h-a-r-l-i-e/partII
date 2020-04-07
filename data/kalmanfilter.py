@@ -25,8 +25,6 @@ class Filter():
     def sim_time_step():
         if self.peaks.size > self.freq * (self.time + self.step):
 
-
-
     def update(self, mean, var):
         self.mean = (var * self.mean + self.var * mean) / (self.var + var)
         self.var = 1/(1/self.var + 1/var)
