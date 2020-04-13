@@ -99,7 +99,7 @@ def write_validity_table(filename, nlms=True):
 
 
 def test_validity(ax1, ax2, step, nlms=True, filterx=True, filtery=False, filterz=False, taps=20, noise=testsyncs.NOISE_MEDIUM):
-    segmentsize = 10
+    segmentsize = 20
     ppgs, ecgs, accxs, accys, acczs = testsyncs.getSegmentsAtNoise(noise, segmentsize)
 
     average_error = 0
@@ -142,69 +142,53 @@ def test_validity(ax1, ax2, step, nlms=True, filterx=True, filtery=False, filter
         nlms, filterx, filtery, filterz, taps, average_error))
 
     #plt.figure(num="step={},nlms={},taps={}".format(step, nlms, taps))
-    ax1.plot(xs, ys, label="{} taps".format(taps))
+
+    label = "{} Taps".format(taps)
+    label = "Step {}".format(step)
+    label = "NLMS" if nlms else "LMS"
+
+    ax1.plot(xs, ys, label=label)
 
     xs = np.sort(np.abs(errors))
     
-    ax2.plot(xs, ys, label="{} taps".format(taps))
+    ax2.plot(xs, ys, label=label)
 
 
-        
-
-
-def test_time_butter(order):
+def test_time_motion_filter(nlms):
     setup = """import testsyncs
-syncs = testsyncs.getSyncs()
+ppgs, ecgs, accxs, accys, acczs = testsyncs.getSegmentsAtNoise(testsyncs.NOISE_MEDIUM, 30)
+ppg, acc = ppgs[0], accxs[0]
+
 import os
-s = syncs[0]
-ecg, ppg = s.getSyncedSignals()
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import filtering
-order = {}""".format(order)
+import motionfilter
+taps = 15
+step = 1
+nlms = {}""".format(nlms)
 
-    test = """filtering.chebyshev2_filter(ppg, 0.4, 4, order=order)"""
-    time = timeit.timeit(setup=setup, stmt=test, number=10000)
-    print("time at order {}, is {}".format(order, time))
-
-def test_validity_butter(order):
-    freq = 100
-    size = 120
-    heart_rate = 120
-    lowcut = 0.4
-    highcut = 4
-    iters = 1000
-
-    total_product = 0
-    
-    for i in range(iters):
-        hb, hb_noisy = sim_heartbeat_noisy(freq, size, heart_rate)
-
-        xs = np.arange(0, hb.size / freq, 1/freq)
-
-        hb_noisy_signal = data.getSignal(hb_noisy, freq)
-
-        filtered = filtering.butter_bandpass_filter(hb_noisy_signal, lowcut, highcut, order=order)
-
-        total_product += np.max(np.correlate(filtered.getValues() / np.linalg.norm(filtered.getValues()), 
-            hb / np.linalg.norm(hb), mode='same'))
-
-    average_product = total_product / iters
-    print("average product : {}".format(average_product))
-
-
-
+    test = """motionfilter.adaptiveFilter(ppg, acc, step, nlms, M=taps)"""
+    time = timeit.timeit(setup=setup, stmt=test, number=1000)
+    print("time with nlms {}, is {}".format(nlms, time))
 
 
 def plot_adaptive_validity(nlms, noise):
     ax1 = plt.subplot(121)
     ax2 = plt.subplot(122)
-    for taps in [1,5,10,15,20]:
-        for step in [1]: 
-            print("########   taps = {}, steps = {}  ############".format(taps, step))
-            for x in [True]:
-                for y in [False]:
-                    for z in [False]:
-                        test_validity(ax1, ax2, step, nlms, x, y, z, taps=taps, noise=noise)
+    taps = 15
+
+    # Test both with optimal parameters
+    test_validity(ax1, ax2, 1, True, True, False, False, taps=taps, noise=noise)
+    test_validity(ax1, ax2, 1, False, True, False, False, taps=taps, noise=noise)
+
+    if False:
+        for taps in [15]:
+            for step in [0.1, 0.5, 1, 1.5, 2]: 
+                print("########   taps = {}, steps = {}  ############".format(taps, step))
+                for x in [True]:
+                    for y in [False]:
+                        for z in [False]:
+                            test_validity(ax1, ax2, step, nlms, x, y, z, taps=taps, noise=noise)
 
     ax1.legend()
     ax1.set_title("Error")
@@ -221,18 +205,25 @@ def plot_adaptive_validity(nlms, noise):
     ax2.set_xlim(0,200)
 
 if __name__ == "__main__":
+    test_time_motion_filter(True)
+    test_time_motion_filter(False)
+
+
     #write_validity_table("lms_validity.csv", nlms=False)
+    plot_adaptive_validity(None, testsyncs.NOISE_MEDIUM)
+    plt.show()
+    
     plt.figure("nlms, medium")
     plot_adaptive_validity(True, testsyncs.NOISE_MEDIUM)
 
-    plt.figure("nlms, high")
-    plot_adaptive_validity(True, testsyncs.NOISE_HIGH)
+    # plt.figure("nlms, high")
+    # plot_adaptive_validity(True, testsyncs.NOISE_HIGH)
 
     plt.figure("lms, medium")
     plot_adaptive_validity(False, testsyncs.NOISE_MEDIUM)
 
-    plt.figure("lms, high")
-    plot_adaptive_validity(False, testsyncs.NOISE_HIGH)
+    # plt.figure("lms, high")
+    # plot_adaptive_validity(False, testsyncs.NOISE_HIGH)
 
     plt.show()
 

@@ -46,7 +46,13 @@ class Signal():
         return newSignal
 
     def __getitem__(self, key):
-        return getSignal(self.vals[key], self.freq)
+        item = self.vals[key] 
+
+        if item.size == 1:
+            return item
+
+        return getSignal(item, self.freq)
+
 
     def __setitem__(self, key, item):
         self.vals[key] = item

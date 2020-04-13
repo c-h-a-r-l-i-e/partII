@@ -73,51 +73,21 @@ def test_validity(ax1, ax2, method, label, step=0.1, nlms=True, filterx=False, f
     ax2.plot(xs, ys, label=label)
 
 
-        
-
-
-def test_time_butter(order):
+def test_time(method):
     setup = """import testsyncs
 syncs = testsyncs.getSyncs()
 import os
 s = syncs[0]
 ecg, ppg = s.getSyncedSignals()
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
-import filtering
-order = {}""".format(order)
+import peakfind"""
 
-    test = """filtering.chebyshev2_filter(ppg, 0.4, 4, order=order)"""
-    time = timeit.timeit(setup=setup, stmt=test, number=10000)
-    print("time at order {}, is {}".format(order, time))
-
-def test_validity_butter(order):
-    freq = 100
-    size = 120
-    heart_rate = 120
-    lowcut = 0.4
-    highcut = 4
-    iters = 1000
-
-    total_product = 0
-    
-    for i in range(iters):
-        hb, hb_noisy = sim_heartbeat_noisy(freq, size, heart_rate)
-
-        xs = np.arange(0, hb.size / freq, 1/freq)
-
-        hb_noisy_signal = data.getSignal(hb_noisy, freq)
-
-        filtered = filtering.butter_bandpass_filter(hb_noisy_signal, lowcut, highcut, order=order)
-
-        total_product += np.max(
-            np.correlate(filtered.getValues() / np.linalg.norm(filtered.getValues()), 
-            hb / np.linalg.norm(hb), mode='same'))
-
-    average_product = total_product / iters
-    print("average product : {}".format(average_product))
-
-
-
+    if method == "sd":
+        test = """peakfind.find_peaks_min_sd(ppg)"""
+    elif method == "naive":
+        test = """peakfind.find_peaks(ppg)"""
+    time = timeit.timeit(setup=setup, stmt=test, number=1000)
+    print("time with method {}, is {}".format(method, time))
 
 
 def plot_validity():
@@ -145,6 +115,8 @@ def plot_validity():
     #ax2.set_xlim(0,200)
 
 if __name__ == "__main__":
+    test_time('sd')
+    test_time('naive')
     plot_validity()
     plt.show()
 
