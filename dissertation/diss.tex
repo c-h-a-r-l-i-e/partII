@@ -152,9 +152,6 @@ used to any substantial extent for a comparable purpose.
 \newpage
 \section*{Acknowledgements}
 
-This document owes much to an earlier version written by Simon Moore
-\cite{Moore95}.  His help, encouragement and advice was greatly 
-appreciated.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % now for the chapters
@@ -239,14 +236,12 @@ peak.
 \label{fig:typicalppgsignal}
 \end{figure}
 
-\section{Running}
-
 \section{Techniques}
 
 In this section, I detail the techniques which I may find useful in my
 implementation.
 
-\section{Filtering} \label{section:intro-filters}
+\section{Filtering} \label{sec:intro-filters}
 
 PPGs produce a large amount of noise from various sources:
 \begin{itemize}
@@ -396,7 +391,7 @@ much more confident in the results we do get.
 
 \subsection{JOSS} \label{joss-intro}
 
-JOSS \cite{Zhang15-2}, or JOint Sparse Spectrum reconstruction consists of two
+JOSS \cite{Zhang15.2}, or JOint Sparse Spectrum reconstruction consists of two
 stages, joint sparse spectrum reconstruction and spectral peak tracking. I
 will explain these here.
 
@@ -450,12 +445,6 @@ This approach improved on JOSS, claiming to provide 8.6\% better estimation
 accuracy, and 20 times faster performance. However, it does require a higher
 sampling rate than JOSS.
 
-\subsection{ANC}
-
-Adaptive noise cancellation (ANC) as proposed by Widrow \cite{Widrow75}<++>
-
-
-
 
 \chapter{Implementation}
 
@@ -478,8 +467,7 @@ Java, allowing libraries written for Java to be used in Kotlin.
 
 \paragraph{Structure}
 
-The program was split into classes as in Figure \ref{fig:classes}. The
-behaviour of each class is as follows:
+The program was split into classes as described here:
 
 \begin{itemize}
 	\item \emph{MainActivity} - central class responsible for starting,
@@ -521,8 +509,16 @@ For example, at the end of the recording in the directory
 
 I chose a simple yet functional interface to allow the user to start and stop
 a recording. The interface changes colour when recording, which makes it very
-easy to verify the recording is happening. Pictures of interface in figure
+easy to verify the recording is in progress. See the interface in figure
 \ref{fig:interface}.
+
+\begin{figure}[tbh]
+	\centerline{\includegraphics[width=0.2\textwidth]{figs/interface.png}}
+	\caption{Watch Interface.}
+	\label{fig:interface}
+\end{figure}
+
+
 
 \paragraph{Problems}
 
@@ -681,7 +677,7 @@ the watch to Google Drive via my server. And thus, I have completed the data
 recording process. The data is recorded on the Wear OS app, and then with a
 click transmitted to a Google Drive so it can be analysed.
 
-\subsection{Synchronising Signals} \label{section:sync}
+\subsection{Synchronising Signals} \label{sec:sync}
 
 Once I have collected the PPG signal from the watch, and have recorded the ECG
 from the chest, I need a method to synchronise the signals, such that they
@@ -833,14 +829,15 @@ def fastCorrelate(f, g, freq, initTimeGap = 0.25, searchBound = 3):
     return (k, v)
 \end{lstlisting}
 
-In Section \ref{section:evaluate-sync} I found that a value of \(g=0.25\)s
+In Section \ref{sec:evaluate-sync} I found that a value of \(g=0.25\)s
 provides significantly better performance, but still finds the correct time
 difference for all recorded data.
 
 \section{Filtering}
 
 In this section, I discuss the implementation of filters, as introduced in
-\ref{section:into-filters}. The ideal filter, as described above, is impossible - and 
+section
+\ref{sec:intro-filters}. The ideal filter, as described above, is impossible - and 
 hence we have a
 variety of filters which compromise between the desirable characteristics.
 Following this, I detail two of these compromises - the Butterworth filter,
@@ -1045,6 +1042,7 @@ intuitively, we can create an algorithm which iterates through the samples,
 comparing each sample to it's neighbours, which has complexity \(O(n)\).
 
 \subsection{Peak-Peak Standard Deviation Minimization}
+\label{sec:sd-min}
 
 Finding the local maxima is a naive approach that doesn't adapt to any problem
 specific knowledge. For example, we know heart-rate will not climb above 220
@@ -1069,14 +1067,48 @@ the standard deviation of their intervals. The idea is every time we increase th
 exclude more peaks. Then at the end, the peaks we actually select are the peaks which give a reasonable
 heart-rate (in the range 20-240 bpm), and have the smallest standard deviation.
 
-So, we have developed an algorithm that attempts to find a heart-beat with
-regular peak-peak intervals, and is within a reasonable range.
+The code I produced to do this is below:
+\begin{lstlisting}[language=Python]
+percs = [0, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 150, 200, 300]
+mov_ave = moving_average(signal, window_size)
+mov_ave = mov_ave.getValues()
+signal_vals = signal.getValues()
+
+min_sd = np.inf
+current_peaks = []
+
+for perc in percs:
+    current_mov_ave = mov_ave + mov_ave * perc / 100 
+    
+    #Find points above current moving average 
+    x_peaks = (signal_vals > current_mov_ave).nonzero()[0]
+    y_peaks = signal_vals[x_peaks]
+    peak_edges = (np.diff(x_peaks) > 1).nonzero()[0] + 1 
+    
+    # find the maximum between the peak edges. 
+    peaks = []
+    for i in range(len(peak_edges) - 1): 
+        ys = y_peaks[peak_edges[i]:peak_edges[i+1]].tolist()
+        if len(ys) > 0:
+    	peaks.append(x_peaks[peak_edges[i] + ys.index(max(ys))])
+    
+    # Calculate standard deviation of the peak peak intervals
+    intervals = np.diff(peaks) / signal.getFrequency()
+    sd = np.std(intervals)
+    
+    if sd < min_sd:
+        min_sd = sd
+        current_peaks = peaks
+
+return np.array(current_peaks)
+
+\end{lstlisting}
 
 \section{Joint Sparse Spectrum Reconstruction}
 
 So far all techniques I used to calculate heart-rate have worked in the time
 domain, so now I'll look at using the frequency domain. I developed a
-technique based on JOSS \cite{Zhang15-2}, which I discussed in the Section
+technique based on JOSS \cite{Zhang15.2}, which I discussed in the Section
 \ref{joss-intro}. The algorithm is composed of two main stages, joint sparse
 spectrum reconstruction and spectral peak tracking. 
 
@@ -1099,7 +1131,7 @@ $V \in \mathbb{R} ^{M \times 4}$ models noise, and $X \in
 solutions for $X$, finding one is equivalent to finding the spectrum of each
 of the input signals.
 
-To calculate $X$, I make use of the MFOCUSS algorithm \cite{T}<++> TODO.
+To calculate $X$, I make use of the MFOCUSS algorithm \cite{Cotter05}.
 MFOCUSS is designed to solve undetermined systems of measurement vectors, such
 as what we have. It is optimised to provide solutions where $X$ is sparse, .
 I used the
@@ -1339,7 +1371,7 @@ private val mGattUpdateReceiver = object : BroadcastReceiver() {
 \subsection{Sensor Fusion}
 
 Once I had gathered data from the earbuds, I evaluated it and found a problem,
-see section \ref{section:earbud-problem} for details. In essence, the issue I
+see section \ref{sec:earbud-problem} for details. In essence, the issue I
 found was that the earbuds would lose the heartbeat signal due to the sensor
 changing position during a run. Particularly annoyingly, the earbuds report a
 heart-rate of zero whenever this happens. 
@@ -1359,7 +1391,7 @@ It consists of two phases:
 	\item Prediction step - predict the current heart rate based on the
 		previous heart-rate, and the readings from the watch PPG.
 
-	\item Update step - when we get a confirmed measurement from the
+	\item Correct step - when we get a confirmed measurement from the
 		earbuds, we move the heart-rate to the earbud's estimation.
 \end{enumerate}
 
@@ -1373,9 +1405,56 @@ filter will respond quicker, a low gain produces more smoothing.
 
 The code for my Kalman filter is as follows:
 
-\begin{lstlisting}
 
-\end{lstlisting}<++>
+\begin{lstlisting}[language=Python]
+
+def predict(self, t, old_hr, old_var):
+    if t < 1:
+        raise ValueError("Predict step must start at time t > 0")
+
+    # calculate hr difference between t-1 and t on the watch
+    diff = self.watch[t] - self.watch[t-1]
+
+    hr = old_hr + diff
+    var = old_var + self.predict_var
+
+    return hr, var
+
+
+def correct(self, t, predicted_hr, predicted_var):
+    # Calculate Kalman gain
+    k = predicted_var  / (predicted_var + self.ear_noise)
+
+    # Calculate new hr and variance
+    hr = predicted_hr + k * (self.ear[t] - predicted_hr)
+    var = (1 - k) * predicted_var
+
+    return hr, var
+
+
+def filter(self):
+    hrs = np.zeros(self.size)
+
+    # Initial step, wait until we get some data from the ear sensor before starting the filter
+    t_min = 1
+    while self.ear[t_min] == 0:
+        t_min += 1
+
+    hr = self.ear[t_min]
+    var = self.ear_noise
+
+    # Run the Kalman filter
+    for t in range(t_min, self.size):
+        hr, var = self.predict(t, hr, var)
+
+        if self.ear[t] != 0:
+            hr, var = self.correct(t, hr, var)
+
+        hrs[t] = hr
+
+    return data.Signal(hrs, 1)
+
+\end{lstlisting}
 
 \chapter{Evaluation}
 
@@ -1387,9 +1466,9 @@ for each commenting on their validity and performance.
 
 \section{Gathering Data}
 
-\subsection{Synchronising Signals} \label{section:evaulate-sync}<++>
+\subsection{Synchronising Signals} \label{sec:evaluate-sync}
 
-In section \ref{section:sync}, I detail an algorithm which allows me to
+In section \ref{sec:sync}, I detail an algorithm which allows me to
 calculate the difference in start-times between different recordings from a
 watch and from an ECG. Initially I use cross-correlation of accelerometer signals to
 determine the time at which the signals are the most similar, however this is
@@ -1627,37 +1706,29 @@ much time.
 \section{Motion Artefact Reduction}
 
 In this section I talk about the work done to evaluate the effectiveness of my
-motion artefact reduction techniques. I discuss the value of different
-approaches in terms of how effective they are at removing motion noise, and in
-terms of how computationally expensive they are. I first detail the tests I
+motion artefact reduction techniques. 
+I first detail the tests I
 ran, followed by the results of these tests on the different algorithms.
 
 I will test the algorithms on different levels of motion corruption, to
 determine what solution is most effective for each level. I divide the
-data into thirty second segments of PPG data, labelled with one of three
-noise levels. I assign the noise level based on the speed at which that run
-was taking place, as the greater the speed, the more motion noise. I assign
-the noise levels as follows:
-
-\begin{itemize}
-	\item Low - running speed 3 km/h or below
-	\item Medium - running speed between 3 km/h and 10 km/h
-	\item High - running speed 10 km/h or above
-\end{itemize} 
+data into twenty second segments of PPG data, labelled with it's running speed. For
+testing motion artefact reduction, I only test data recorded while running at
+a speed greater than 3 km/h.
 
 Now, to test my motion filtering algorithm, for each PPG data segment, I run
 the algorithm on it. With the results, I calculate the heart-rate that my
 heart-rate calculate algorithm would compute. 
-I use my standard deviation minimisation algorithm from \ref{}
-I then compare this to the
+I use my standard deviation minimisation algorithm from \ref{sec:sd-min}
+and then compare this to the
 ground truth which is the ECG data associated with that segment, to get the
-error for that segment.
+error associated with it.
 
 I test two of my motion filtering algorithm - Least Mean Squares (LMS) and Normalised Least Mean
-Squares (NLMS). Both of these have a parameter called step-size, so I will
-compare both of them with a variety of step sizes to determine which is
-optimal for each class of motion noise.
-
+Squares (NLMS). Both of these have parameters step-size and number of taps, so I will
+compare both of them with a variety of step sizes and tap numbers to determine
+the optimal parameters. Once I have found the optimal parameters, I will
+compare LMS and NLMS in terms of execution time and validity.
 
 \subsection{LMS}
 
@@ -1666,10 +1737,9 @@ other words, do I adaptively filter against acceleration from the x, y or z
 axis, or some combination of these axes. To test this, I ran the adaptive
 filters on all of the medium noise data I have, at various different step sizes
 and number of taps. For each tap number and step size, I try every possible
-combination of filtering using the x, y and z acceleration. I have placed the
-results of these tests in Appendix \ref{section:lms-errors}.
+combination of filtering using the x, y and z acceleration. 
 
-I condensed the information within the tables, by averaging the ordering of
+I condensed the information from these tests, by averaging the ordering of
 the errors. If a particular combination of axis produced the best filtering,
 based on average absolute error 
 it is assigned number 1, the next best 2 and so on. Then, I take the average
@@ -1711,13 +1781,24 @@ the error distributions. The results are in Figure \ref{fig:lms-medium}.
 
 The results show that all of the errors are skewed towards negative values,
 regardless of number of taps. Looking at the absolute errors, we see that
-using 5 taps produces the lowest median absolute error, as the curve remains
+using 15 taps produces the lowest median absolute error, as the curve remains
 closest to error = 0. Having 1 tap produces a worse error, as we do not reduce
 enough of the motion noise, whereas more taps removes too much data, resulting
 in the error increasing.
 
-Next, using 5 taps, I determine the best step value to use for LMS filtering.
-I plot the cumulative graphs again, see Figure .
+Next, using 15 taps, I determine the best step value to use for LMS filtering.
+I plot the cumulative graphs again, see Figure \ref{fig:lms-medium-step}. The
+results show all the step sizes under-approximate the heart-rate, however a
+step size of 1 provides the lowest absolute error, and hence should be used.
+Lower step sizes likely take too long to converge, and don't reach the correct
+solution, while larger step sizes likely miss the solution.
+
+\begin{figure}[tbh]
+	\centerline{\includegraphics[width=0.7\textwidth]{figs/lms-steps-error-medium-noise.png}}
+	\caption{Comparison of LMS Error at Different Step Sizes.}
+	\label{fig:lms-medium-step}
+\end{figure}
+
 
 \subsection{NLMS}
 
@@ -1744,46 +1825,127 @@ N           & N           & Y           & 3.13          \\
 \end{tabular}
 \end{table}
 
+Next I investigate the effect of the number of taps on NLMS. The results, in
+Figure \ref{fig:nlms-medium-taps}, are very similar to what we saw for LMS, and
+again using 15 taps is optimal.
+
+\begin{figure}[tbh]
+	\centerline{\includegraphics[width=0.7\textwidth]{figs/nlms-taps-error-medium-noise.png}}
+	\caption{Comparing Numbers of Taps for NLMS.}
+	\label{fig:nlms-medium-taps}
+\end{figure}
+
+Now, I investigate the effect of step size on NLMS. The errors are plotted in
+Figure \ref{fig:nlms-medium-step}. We see that a step size of 1 is optimal,
+any larger and very quickly the error increases as we don't converge on the
+actual solution.
+
+\begin{figure}[tbh]
+	\centerline{\includegraphics[width=0.7\textwidth]{figs/nlms-steps-error-medium-noise.png}}
+	\caption{Comparing Step Size for NLMS.}
+	\label{fig:nlms-medium-step}
+\end{figure}
+
+Now I have investigated LMS and NLMS, finding the optimal parameters. I
+will next look at the differences between them given their optimal
+parameters, both in terms of execution time and validity.
+
+In figure \ref{fig:lms-nlms-validity} I plot the errors calculated by the
+algorithms. The plot shows that they both tend to underestimate the
+heart-rate. However, NLMS produces a slightly lower absolute error. 
+
+\begin{figure}[tbh]
+	\centerline{\includegraphics[width=0.7\textwidth]{figs/nlms-lms-validity.png}}
+	\caption{Comparison of NLMS and LMS Validity.}
+	\label{fig:lms-nlms-validity}
+\end{figure}
+
+To test time, I use the Python module \emph{timeit} to run the algorithms on
+thirty seconds of data, and time how long they take to run 10000 times over.
+The results are in table \ref{table:lms-nlms-time}, showing that lms runs in
+less time than NLMS. Hence the choice between NLMS and LMS is a trade-off
+between need for quick results and need for lower errors.
+
+\begin{table}[tbh]
+\centering
+\caption{Comparing Adaptive Filtering Running Times.}
+\label{table:lms-nlms-time}
+\begin{tabular}{|l|l|}
+\hline
+Technique               & Time for 10000 iterations (s) \\ \hline
+NLMS                    & 44.61                         \\
+LMS                     & 34.49                         \\
+\hline
+\end{tabular}
+\end{table}
+
+
 \section{Heart Rate Calculation}
 
-To evaluate my Heart-Rate calculation, I establish the order of the algorithms
-in theory, followed by investigating how they actually perform when given
-data. I also establish the effectiveness of the algorithms, when given a clean
-PPG signal. I use a clean signal as I am assuming the filtering is done
-elsewhere, leaving a clean signal.
+To evaluate my Heart-Rate calculation, I first calculate the running time of
+both algorithms - local maxima, and peak-peak standard deviation minimization
+. I also establish the effectiveness of the algorithms, when given a clean
+PPG signal.
 
-For the clean data, I have recorded a section of data using the wristwatch and ECG
-where I do not move. I then pass it through a Butterworth filter to remove
+For the clean data, I have recorded an hour of data using the wristwatch and ECG
+where I do not make large movements. I then pass it through a Butterworth filter to remove
 noise out of the valid range. I do not attempt to remove motion noise, as
 there should be minimal noise in this data.
 
+First I evaluate the time taken, by running the algorithms on a section of
+data, and repeating 1000 times. As can be seen in Table \ref{table:hr-times},
+the local maxima technique is much less expensive. This is as it only needs to
+iterate through the signal once. Hence I should choose the local maxima
+technique if it can perform as well as standard deviation minimization.
+
+\begin{table}[]
+\centering
+\caption{Comparing Heart Rate Calculation Running Times.}
+\label{table:hr-times}
+\begin{tabular}{|l|l|}
+\hline
+Technique                       & Time for 1000 iterations (s) \\ \hline
+Local Maxima                    & 0.36                         \\
+Standard Deviation Minimisation & 76.54                        \\
+\hline
+\end{tabular}
+\end{table}
+
 Finally I compare the result of the heart-rate calculation to the actual
 heart-rate measure provided by the ECG.
-
-\ldots TODO: compare time, show a plot
-
 In Figure \ref{fig:hrc-error} I plot the error and absolute error of both
 methods. The data clearly shows that standard deviation minimization is
 superior, providing a much lower average absolute error. We see that 90\% of
 the recorded errors are below 10bpm, whereas 90\% of local maxima calculated
-heart-rates are above 35bpm.
-
+heart-rates are below 35bpm. The error graph shows that the local maxima
+technique nearly always over-approximates the heart-rate, whereas the standard
+deviation technique tends to under-approximate.
 
 \begin{figure}[tbh]
 	\centerline{\includegraphics[width=0.7\textwidth]{figs/peakfind.png}}
-	\caption{Comparison of LMS Error at Different Tap Numbers.}
+	\caption{Comparison of Peak Finding Algorithms.}
 	\label{fig:hrc-error}
 \end{figure}
 
-The reason the errors differ so much can be seen in Figure \ref{}<++>
+The reason the errors differ so much can be seen in Figure
+\ref{fig:hr-peak-comparison}. It is clear that the local maxima technique
+over-approximates the number of peaks, as it often finds peaks which are
+either noise or not caused by the heart-rate.
 
 \begin{figure}[tbh]
 	\centering
 	\includegraphics[width=0.7\textwidth]{figs/peak-comparison.png}
-	\caption{<+caption text+>}
-	\label{fig:<+label+>}
-\end{figure}<++>
+	\caption{Comparison of Heart Rate Peak Calculations.}
+	\label{fig:hr-peak-comparison}
+\end{figure}
 
+I will use the standard deviation minimization technique in my work, as it
+produces significantly lower errors. It does take longer, however it would
+still produce results in real-time on a smart-watch.
+
+\section{Joint Sparse Spectrum Reconstruction}
+
+TODO: not complete yet\ldots
 
 \section{Earbuds}
 
@@ -1801,7 +1963,7 @@ ECG in Figure \ref{fig:earbud-fast}.
 	\label{fig:earbud-fast}
 \end{figure}
 
-\subsection{Problem} \label{section:earbud-problem}
+\subsection{Problem} \label{sec:earbud-problem}
 
 The problem with the earbuds is that they occasionally lose contact with the
 ear. This can happen as a combination of sweating and motion dislodges the
@@ -1813,6 +1975,21 @@ are rotated, the reported heart-rate drops to zero. This can be seen in Figure
 \ref{fig:earbud-fast}. Where the heart-rate is tracking accurately, but then
 suddenly just drops to zero.
 
+\subsection{Sensor Fusion}
+
+Figure \ref{fig:kalman-working} shows the effectiveness of the Kalman filter -
+when the earbud's signal drops out it follows the trajectory suggested by the
+watch.
+
+\begin{figure}[tbh]
+	\centerline{\includegraphics[width=0.7\textwidth]{figs/kalman-working.png}}
+	\caption{Kalman Filter Demonstration.}
+	\label{fig:kalman-working}
+\end{figure}
+
+
+TODO: not yet complete\ldots
+
 \chapter{Conclusion}
 
 I have met all the success criteria set out in my project proposal.
@@ -1821,9 +1998,28 @@ I have met all the success criteria set out in my project proposal.
 
 In this project I explored a few techniques which calculate heart-rate from
 the noisy signals coming from a smart-watch worn while running. To remove
-random noise not caused by motion, I experimented with band-pass filters. 
+random noise not caused by motion, I experimented with band-pass filters,
+finding the optimal parameters for my usage. To remove motion noise, I
+investigated and implemented two adaptive noise cancellation techniques. Then
+to calculate the heart-rate I looked into two different methods. I also
+looked at using joint spectrum calculations to estimate heart-rate, and remove
+motion noise.
+
+Finally, I showed that putting heart-rate sensors into earbuds is a promising
+technique, although the signal can cut out. Hence, my developed sensor fusion
+technique which combines heart-rate from the earbuds and from a wrist-watch
+provides a better signal than either alone.
 
 \paragraph{Issues}
+
+I found that using the wrist watch sensors alone, I could not get a 
+good estimate of heart-rate. This is in line with other algorithms suggested
+in papers.
+
+Using two sensors, I found I could estimate heart-rate with much more
+confidence. Currently the sensor-fusion algorithm is not very accessible to
+users, as the interface is very minimal, so if I had more time I would have
+developed an interface which allowed users to better track their workouts.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1835,14 +2031,14 @@ random noise not caused by motion, I experimented with band-pass filters.
 % the appendices
 \appendix
 
-\chapter{Data tables}
-\section{NLMS Absolute Errors} \label{section:nlms-errors}
-
-\csvautolongtable{figs/nlms_validity.csv}
-
-\section{LMS Absolute Errors} \label{section:lms-errors}
-
-\csvautolongtable{figs/lms_validity.csv}
+%\chapter{Data tables}
+%\section{NLMS Absolute Errors} \label{section:nlms-errors}
+%
+%\csvautolongtable{figs/nlms_validity.csv}
+%
+%\section{LMS Absolute Errors} \label{section:lms-errors}
+%
+%\csvautolongtable{figs/lms_validity.csv}
 
 \chapter{Project Proposal}
 
