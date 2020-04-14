@@ -1945,6 +1945,51 @@ still produce results in real-time on a smart-watch.
 
 \section{Joint Sparse Spectrum Reconstruction}
 
+
+
+To evaluate how effective spectral subtraction is for removing motion noise, I
+run the algorithm on a run recorded at 9 kph, with and without subtraction.
+The results are in Figure \ref{fig:joss_eg} and show that without subtraction,
+the algorithm locks into the wrong frequency, caused by a large motion
+artefact. However, with spectral subtraction we find that the right bpm is
+selected.
+
+\begin{figure}[h]
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{figs/joss_nosub.png}
+  \caption{Without Subtraction.}
+  \label{fig:joss_nosub}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{figs/joss_sub.png}
+  \caption{With Subtraction.}
+  \label{fig:joss_sub}
+\end{subfigure}
+\caption{Spectrum Reconstruction.}
+\label{fig:joss_eg}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\begin{subfigure}{.6\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{figs/joss_nlms_low.png}
+  \caption{Low Motion Noise.}
+  \label{fig:joss_nlms_low}
+\end{subfigure}
+\\
+\begin{subfigure}{.6\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{figs/joss_nlms_medium.png}
+  \caption{High Motion Noise.}
+  \label{fig:joss_nlms_medium}
+\end{subfigure}
+\caption{Comparing Spectrum Reconstruction to NLMS.}
+\label{fig:joss_nlms}
+\end{figure}
+
 TODO: not complete yet\ldots
 
 \section{Earbuds}
