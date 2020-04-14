@@ -62,7 +62,7 @@ def getSyncsAtNoise(noise):
     if noise not in (NOISE_LOW, NOISE_MEDIUM, NOISE_HIGH):
         raise ValueError("Noise must be one of NOISE_LOW, NOISE_MEDIUM or NOISE_HIGH")
 
-    parent = sys.path[0] + "/../"
+    parent = "/home/charlie/Documents/project/data/"
     syncs = []
     for data in validData:
         if data['noise'] == noise:

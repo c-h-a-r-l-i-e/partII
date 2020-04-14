@@ -9,7 +9,8 @@ import heartpy as hp
 from scipy.signal import resample
 import matplotlib.pyplot as plt
 
-PLOTTING = False
+PLOTTING = True
+HEARTPY_SEGS = True
 
 
 def get_ecg_hr(signal, ave_size = 16):
@@ -22,19 +23,32 @@ def get_ecg_hr(signal, ave_size = 16):
 
 
     length = int(vals.size / freq)
-    hr = np.zeros(length)
 
-    for i in range(ave_size, length - 1, 1):
-        window = vals[freq * (i - ave_size) : freq * i]
-        filtered = hp.remove_baseline_wander(window, freq)
+    if HEARTPY_SEGS:
+        filtered = hp.remove_baseline_wander(hp.scale_data(vals), freq)
+        overlap = 1 - (1/ave_size)
+        wd, m = hp.process_segmentwise(filtered, sample_rate=freq, segment_width=ave_size, 
+                segment_overlap=overlap, bpmmax=220, mode='fast', 
+                outlier_method='z-score', replace_outliers=False)
+        bpm = np.array(m['bpm'])
+        hr = np.zeros(len(bpm) + ave_size//2)
+        hr[(ave_size//2):] = bpm
 
-        wd, m = hp.process(hp.scale_data(filtered), freq, bpmmax=220, windowsize=0.1)
-        hr[i] = m["bpm"]
-        if hr[i] > 210 and PLOTTING:
-            hp.plotter(wd, m)
-    
-    for i in range(ave_size):
-        hr[i] = hr[ave_size]
+
+    else:
+        hr = np.zeros(length)
+        for i in range(ave_size, length - 1, 1):
+            window = vals[freq * (i - ave_size) : freq * i]
+            filtered = hp.remove_baseline_wander(hp.scale_data(window), freq)
+
+            wd, m = hp.process(hp.scale_data(filtered), freq, bpmmax=220, windowsize=0.1)
+            hr[i] = m["bpm"]
+            if hr[i] > 210 and PLOTTING:
+                hp.plotter(wd, m)
+        
+        for i in range(ave_size):
+            hr[i] = hr[ave_size]
+
 
     return hr
 

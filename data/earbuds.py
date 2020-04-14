@@ -64,11 +64,20 @@ class Sync(sync.Sync):
             self._hr = None
 
         except:
-            # TODO: actually sync
             self._ecg = self.getSyncedECG()
             self._ear = data.getSignal(self.ear_data.get_hr()[1], 1)
             self._hr = self.getSyncedHR()
             self._ppg = None
+
+            time_diff = self.getTimeDifference()
+            delta = int(abs(time_diff))
+
+            if time_diff < 0:
+                self._ear = self._ear[delta:]
+
+
+
+            
         
 
     @property
@@ -145,7 +154,7 @@ def plot_ppg(signal, label="PPG"):
 
 
 def plot_ecg(signal, label="ECG"):
-    hr = heartrate.get_ecg_hr(signal, ave_size=15)
+    hr = heartrate.get_ecg_hr(signal, ave_size=40)
     plt.plot(np.arange(0, hr.size, 1), hr, label=label)
     
 def plot_earbud(hr, label="Earbuds"):

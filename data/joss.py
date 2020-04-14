@@ -9,6 +9,7 @@ import heartpy as hp
 import matlab.engine
 
 DEBUG = False
+VALIDATE = True
 
 def get_ecg_bpm(ecg, start, window_size = 8, shift=2):
     freq = ecg.frequency
@@ -19,13 +20,15 @@ def get_ecg_bpm(ecg, start, window_size = 8, shift=2):
     return m['bpm']
 
 
-def joss(sync, freq = 20, window_size = 8, shift = 2):
+def joss(sync, freq = 20, window_size = 8, shift = 4, errors=False):
     """
     Run the JOSS algorithm to calculate heart-rate.
 
     Inputs
     -------------
      - sync : the running data sync object
+
+     - errors : should errors be returned
 
     Returns
     ------------
@@ -42,10 +45,10 @@ def joss(sync, freq = 20, window_size = 8, shift = 2):
     ecg = sync.getSyncedECG()
 
     
-    ppg = filtering.butter_bandpass_filter(ppg, 0.4, 4, 3)
-    accel_x = filtering.butter_bandpass_filter(accel_x, 0.4, 4, 5)
-    accel_y = filtering.butter_bandpass_filter(accel_y, 0.4, 4, 5)
-    accel_z = filtering.butter_bandpass_filter(accel_z, 0.4, 4, 5)
+    ppg = filtering.butter_bandpass_filter(ppg, 0.4, 4, 4)
+    accel_x = filtering.butter_bandpass_filter(accel_x, 0.4, 4, 4)
+    accel_y = filtering.butter_bandpass_filter(accel_y, 0.4, 4, 4)
+    accel_z = filtering.butter_bandpass_filter(accel_z, 0.4, 4, 4)
 
     hr = []
 
@@ -54,6 +57,10 @@ def joss(sync, freq = 20, window_size = 8, shift = 2):
     loc = 121
     bpm = 121
     trap_count = 0
+
+    if errors:
+        error_list = []
+
 
     # Iterate through windows
     start = 0
@@ -68,6 +75,7 @@ def joss(sync, freq = 20, window_size = 8, shift = 2):
                 loc, bpm, trap_count, spectrum.shape))
             ecg_bpm = get_ecg_bpm(ecg, start, window_size)
             print("ECG bpm = {}".format(ecg_bpm))
+            plt.subplot(224)
             plt.plot(spectrum)
             plt.gca().axvline(x=ecg_bpm, color='r')
             plt.show()
@@ -75,11 +83,26 @@ def joss(sync, freq = 20, window_size = 8, shift = 2):
         loc, bpm, trap_count = joss_spt(spectrum, freq, loc, bpm, trap_count)
 
 
+        if errors:
+            try:
+                ecg_bpm = get_ecg_bpm(ecg, start, window_size)
+                error = bpm - ecg_bpm
+                error_list.append(error)
+            except:
+                print("Error with HR calculation")
+                
+
+                
+
+
         hr.append(bpm)
 
         start += shift 
 
     eng.quit()
+
+    if errors:
+        return error_list
 
     return np.array(hr)
 
@@ -141,10 +164,21 @@ def joss_ssr(ppg, accel_x, accel_y, accel_z, eng):
 
         signal_ssr[i] = signal_ssr[i] - aggression * accel_max[i]
 
+    if DEBUG:
+        plt.subplot(221)
+        plt.title("x")
+        plt.plot(spectra[:,1])
+        plt.subplot(222)
+        plt.title("y")
+        plt.plot(spectra[:,2])
+        plt.subplot(223)
+        plt.title("z")
+        plt.plot(spectra[:,3])
+
+
     # Set all SSR bins lower than the maximum divided by 5 to 0
     max_bin = np.max(signal_ssr)
     signal_ssr[signal_ssr < max_bin / 4] = 0
-
 
     return signal_ssr, accel_max
     
@@ -207,7 +241,7 @@ def joss_spt(spectrum, freq, prev_loc, prev_bpm, trap_count):
     # validate results
     if loc == prev_loc:
         trap_count += 1
-        if trap_count > 2:
+        if trap_count > 10 and VALIDATE:
             loc = discover_peak(spectrum, prev_loc)
             bpm = 60 * loc / N * freq
 
@@ -244,7 +278,6 @@ def plot_joss_and_ecg(sync):
     hr = joss(sync)
     xs = np.arange(0, hr.size*2, 2)
     plt.plot(xs, hr, label="JOSS on PPG")
-
     ecg_hr = heartrate.get_ecg_hr(sync.getSyncedECG())
     plt.plot(ecg_hr, label="ECG")
 
@@ -257,10 +290,10 @@ if __name__ == "__main__":
     watchdir= sys.argv[2]
     sync = Sync(ecgfile, watchdir)
 
+    joss(sync, errors=True)
+
     plot_joss_and_ecg(sync)
     plt.legend()
     plt.show()
     
-
-
 
