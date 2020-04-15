@@ -1619,8 +1619,8 @@ However, as the filter order increases, the amount of random noise present
 decreases. The 1st order filter has a wide range of random noise, whereas the
 5th order filter removes almost all noise outside the range 0.4 to 4 hz.
 Interestingly, there is an artefact in the 6th order filter, where there is a
-spike at 0.3 hz, which is larger than the desired signal. This is most likely
-a result of TODO.
+spike at 0.3 hz, which is larger than the desired signal, so I will avoid
+using these. 
 
 \begin{figure}
 	\centering
@@ -1639,13 +1639,11 @@ The results of the timing test can be seen in figure \ref{fig:butter-time}. It
 can be seen in the graph that generally higher order results in greater
 execution time. The effect is not linear though - there is a smaller increase
 in execution time 
-between an odd order and the next order. This result means we should use the
-lowest order which provides sufficient filtering.
+between an odd order and the next order. 
 
 If choosing a Butterworth filter, I would opt for a 5th order filter, as it
 provides the most filtering, whilst not producing artefacts as seen in the 6th
-order filter. If the 5th order filter takes too long for the application, then
-a lower order could be chosen.
+order filter. 
 
 \begin{figure}[tbh]
 	\centerline{\includegraphics[width=0.5\textwidth]{figs/butter-time.png}}
@@ -1945,8 +1943,6 @@ still produce results in real-time on a smart-watch.
 
 \section{Joint Sparse Spectrum Reconstruction}
 
-
-
 To evaluate how effective spectral subtraction is for removing motion noise, I
 run the algorithm on a run recorded at 9 kph, with and without subtraction.
 The results are in Figure \ref{fig:joss_eg} and show that without subtraction,
@@ -1971,6 +1967,23 @@ selected.
 \label{fig:joss_eg}
 \end{figure}
 
+I next plot the errors, see Figure \ref{fig:joss_nlms}, comparing the spectrum
+reconstruction to NLMS, for samples taken with both high and low motion noise. 
+
+With low motion noise, NLMS is significantly better than spectrum
+reconstruction. I estimate this is due to the spectrum subtraction - small
+movements result in large and random fluctuations in the accelerometer's
+spectrum - which may then be subtracted from the PPG, removing the useful
+signal. 
+
+With approximately 30\% of the high motion noise, spectrum reconstruction
+performs better than NLMS, these are the cases where the correct frequency is
+tracked. However, for the remaining data, NLMS is far better. The error plot
+shows that for about 50\% of the data, spectrum methods produce a heart-rate between
+125 and 150 bpm lower than the ECG. This is likely caused by the algorithm
+locking on to a lower frequency, such as motion noise - evidence that the
+spectrum subtraction is not completely effective.
+
 \begin{figure}[h]
 \centering
 \begin{subfigure}{.6\textwidth}
@@ -1990,7 +2003,9 @@ selected.
 \label{fig:joss_nlms}
 \end{figure}
 
-TODO: not complete yet\ldots
+In conclusion, my NLMS method is preferable to the spectrum method, as it
+produces far better results. The spectrum method requires more optimisation to
+ensure that we never lock on to frequencies coming from noise.
 
 \section{Earbuds}
 
@@ -2023,8 +2038,8 @@ suddenly just drops to zero.
 \subsection{Sensor Fusion}
 
 Figure \ref{fig:kalman-working} shows the effectiveness of the Kalman filter -
-when the earbud's signal drops out it follows the trajectory suggested by the
-watch.
+when the earbud's signal drops out it follows the curve picked up by the
+watch sensor.
 
 \begin{figure}[tbh]
 	\centerline{\includegraphics[width=0.7\textwidth]{figs/kalman-working.png}}
@@ -2032,8 +2047,23 @@ watch.
 	\label{fig:kalman-working}
 \end{figure}
 
+In Figure \ref{fig:kalman_error} we plot the errors for the watch sensor, the
+earbud sensor and the sensor fusion technique. The graph shows that the
+earbuds and hence the fusion technique produce a significantly lower error than the watch for 90\% of the
+samples, as expected. And, for the 10\% the watch is better - as the earbuds
+report 0 bpm. The sensor fusion technique is clearly better than the earbuds
+for these samples as well, using the watch to guide the output. Hence, the
+sensor fusion technique gets the best of both worlds.
 
-TODO: not yet complete\ldots
+\begin{figure}[tbh]
+	\centerline{\includegraphics[width=0.8\textwidth]{figs/kalman_validity.png}}
+	\caption{Sensor Fusion Error.}
+	\label{fig:kalman_error}
+\end{figure}
+
+In this section I have shown that earbuds produce a very accurate signal, but
+require the sensor fusion method I developed in order to avoid issues where
+the rate drops to zero due to lack of contact.
 
 \chapter{Conclusion}
 
@@ -2061,10 +2091,17 @@ I found that using the wrist watch sensors alone, I could not get a
 good estimate of heart-rate. This is in line with other algorithms suggested
 in papers.
 
+Using spectrum reconstruction appears to be effective in some cases but can
+latch on to the wrong frequency and never recover the correct signal. In
+future work, some more research might be done into determining whether the
+frequency we're currently tracking is reasonable.
+
 Using two sensors, I found I could estimate heart-rate with much more
 confidence. Currently the sensor-fusion algorithm is not very accessible to
 users, as the interface is very minimal, so if I had more time I would have
 developed an interface which allowed users to better track their workouts.
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
