@@ -161,20 +161,21 @@ used to any substantial extent for a comparable purpose.
 \chapter{Introduction}
 
 Elite runners have historically used heart rate to provide an accurate 
-measure of fitness, and allow them to train more effectively. 
+measure of intensity, and allow them to train more effectively. 
 Previously, Electrocardiography (ECG) chest straps have been 
 used to measure heart rate, by detecting the electrical signals controlling 
 the expansion and contraction of the heart. They are accurate devices however
 often prohibitively expensive, and hence inaccessible to casual runners.
 
 In recent years, a new technology has emerged - Photoplethysmogram (PPG) 
-- light is directed at the skin, and sensors measure how much blood vessels
-scatter it. PPG sensors are cheaper than ECG sensors, and hence are 
+- light is directed at the skin, and blood volume changes caused by the
+cardiac cycle are detected through the changes in the reflected light
+intensity. PPG sensors are cheaper than ECG sensors, and hence are 
 available in a variety of products, particularly smartwatches. This 
 innovation has bought a new wave of advanced training and monitoring onto
 the wrists of any runner.
 
-Switching from ECG to PPG is not without flaws though - ECG sensors return a
+Switching from ECG to PPG is not without flaws though - ECG sensors generally return a
 clean signal, as opposed to PPG signals which are contaminated with
 noise.
 
@@ -182,7 +183,7 @@ In particular when running, the motion can cause blood velocity to
 change, and the sensor can slip across the skin \cite{Wijshoff17}, 
 \cite{Wood06}. These result in distortions to the PPG signal, known as a
 motion artifacts (MAs). Fortunately, smartwatches contain other sensors, such
-as accelerometers and gyroscopes which can be used to predict the presence of 
+as accelerometers and gyroscopes which can assist in predicting the presence of 
 MAs, and hence compensate for them.
 
 My task is to research and develop a heart rate detection algorithm
@@ -193,9 +194,10 @@ for smartwatches worn during running.
 This chapter details the steps I took to determine how to develop my
 implementation. It first describes photoplethysmography, the method with which heart-beats are
 detected on watches. Next,
-I give an overview of the algorithms I will use to extract the heart-rate from
-the PPG signal: filters, peak-detectors and motion artefact removers. Finally, I
-outline my development methodology.
+I give an overview of some of the tools I may choose to use in my project:
+filters and spectrums. Then, I take a look at some of the solutions to this
+problem which have been proposed across a few papers. Finally I outline my
+development methodology. 
 
 \section{Photoplethysmography (PPG)}
 
@@ -241,7 +243,7 @@ peak.
 In this section, I detail the techniques which I may find useful in my
 implementation.
 
-\section{Filtering} \label{sec:intro-filters}
+\subsection{Filtering} \label{sec:intro-filters}
 
 PPGs produce a large amount of noise from various sources:
 \begin{itemize}
@@ -257,7 +259,8 @@ PPGs produce a large amount of noise from various sources:
 
 In order to remove much of this noise, we can use filters to remove
 frequencies we know are irrelevant. We know the heartbeat can vary from 
-30 to 220 beats per minute, and hence we would like to disregard any noise 
+30 to 220 beats per minute, and hence we would like to disregard any
+frequencies 
 outside of this range. In this section, I will introduce the concept of 
 filters.
 
@@ -302,7 +305,7 @@ follows:
 		leaving the passband outside those frequencies.
 \end{itemize}
 
-\section{Spectrum}
+\subsection{Spectrum}
 
 A spectrum (or power spectrum) describes the power of each frequency present
 within a signal.
@@ -446,12 +449,48 @@ accuracy, and 20 times faster performance. However, it does require a higher
 sampling rate than JOSS.
 
 
+
+\section{Development Strategy}
+
+I chose to implement the project in several stages:
+
+\begin{enumerate}
+	\item Develop the application to record and save PPG data taken while
+		running, using Android Studio and Kotlin. I will then import the data
+		into Python, which is widely used for data analysis as it's
+		easy to produce terse code, and has several helpful
+		libraries.
+
+	\item Investigate the use of different filters to remove unwanted frequencies.
+
+	\item Implement methods which will remove motion noise from the PPG
+		signal, given that noise is to correlated accerometer signals.
+
+	\item Develop algorithms which will calculate a heart-rate, given a
+		PPG signal.
+
+	\item Investigate joint sparse spectrum reconstruction as a heart-rate
+		calculation technique (based on JOSS above).
+
+	\item Research the use of earbuds as an alternative to wrist-based
+		monitoring.
+
+\end{enumerate}
+
+
 \chapter{Implementation}
+
+In this chapter, I describe the steps taken to create the system. I first
+describe the implementation of a data gathering system, followed by details of
+the algorithms I implement to calculate heart-rate from the data. At the end
+I investigate a promising approach using sensor fusion with 
+wrist-watches and earbuds.
 
 \section{Gathering Data}
 
 In this section I detail the process of developing an
-application to record PPG data on a Wear OS watch. This turned out to be more
+application to record PPG data on a Wear OS watch. Wear OS is a version of
+Android designed by Google for wearables. The development turned out to be more
 complicated than I presumed due to interesting issues inherent with developing for a small
 wearable with limited power.
 
@@ -460,18 +499,20 @@ wearable with limited power.
 \paragraph{Language Choices}
 
 The watch application was developed using the official IDE for Android
-development - Android Studio. I programmed in a language I'd never used before
-- Kotlin. Kotlin is an open source language based on Java, which aims to
-reduce boilerplate code, adds null-safety, and remains interoperable with
-Java, allowing libraries written for Java to be used in Kotlin.
+development, Android Studio. I programmed in 
+Kotlin, an open source language based on Java, which aims to
+reduce boilerplate code, add null-safety, and remain interoperable with
+Java. I had never used Kotlin before this, so first some time was spent
+familiarising myself with the
+language.
 
 \paragraph{Structure}
 
 The program was split into classes as described here:
 
 \begin{itemize}
-	\item \emph{MainActivity} - central class responsible for starting,
-		stopping and saving the recordings.
+	\item \emph{MainActivity} - central class responsible for 
+		recording and saving the data.
 
 	\item \emph{SensorListener} - interface which overrides the Android
 		\emph{SensorEventListener}. Contains methods which
@@ -490,15 +531,18 @@ The program was split into classes as described here:
 \end{itemize}
 
 When the user presses start recording, \emph{MainActivity} registers each
-\emph{SensorListner} with the OS so they receive any sensor changes.
-
+\emph{SensorListener} with the OS so they receive any sensor changes.
 When the user presses stop recording, \emph{MainActivity} unregisters the
-listners and gets each one to save their recording.
+listeners and gets each one to save their recording.
 
 \paragraph{Storing Recordings}
 
 It was critical that I could easily import the recordings into any program, and
-hence I chose to export the data into a CSV text file. Each \emph{Listener}
+hence I chose to export the data into a CSV text file. I could have
+alternatively used something with structure, such as JSON or XML, but the
+data we are recording is very simple, containing identical records. CSV files
+are widely supported, and can be easily imported into spreadsheet software
+allowing me to quickly check that the program was working. Each \emph{Listener}
 class uses a \emph{CSVWriter} object from library \emph{opencsv} to write to a
 unique file for each sensor, within a directory chosen by \emph{MainActivity}.
 For example, at the end of the recording in the directory
@@ -556,8 +600,8 @@ have a reliable sensor, Android occasionally misses readings.
 
 I record the data with a sampling period of 0 - which signifies that I want
 updates as soon as they are available. However, Android is not guaranteed to
-provide this. I mitigate this by noting the time each recordings is provided to the
-application. Then, I define sampling rate to be equal to the time difference
+provide this. We need a constant sampling rate to work with in my programs, so I 
+define sampling rate to be equal to the time difference
 between the first and last sample, divided by the number of samples.
 
 So, I have created an application which allows the user to record
@@ -676,6 +720,25 @@ Now, I have created a system which allows the user to upload recordings from
 the watch to Google Drive via my server. And thus, I have completed the data
 recording process. The data is recorded on the Wear OS app, and then with a
 click transmitted to a Google Drive so it can be analysed.
+
+
+\subsection{ECG}
+
+In order to evaluate this project, I need to known my actual heart-rate. This
+is done using a portable electrocardiogram (ECG) chest strap, the Bitium Faros
+360. It sits on your chest, and records the voltage changes across the skin.
+Peaks in the signal indicate that the heart is beating. The device is setup with a configuration 
+file, where I choose to enable
+the accelerometer, and set the ECG to sample at a rate of 500 hz.
+
+Once I have recorded something using the ECG 
+each recording is saved as an EDF file, a format
+designed for storing medical time series. I read the recordings into Python
+by using the \emph{PyEDFlib} library.
+
+To then calculate the heart-rate I use the Python library \emph{heartpy} which
+has been developed to remove baseline variation and then calculate reliable
+peak positions in the ECG signal.
 
 \subsection{Synchronising Signals} \label{sec:sync}
 
