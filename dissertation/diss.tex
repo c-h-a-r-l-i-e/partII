@@ -518,7 +518,7 @@ The program was split into classes as described here:
 		\emph{SensorEventListener}. Contains methods which
 		are called by the WearOS system whenever new sensor data comes
 		in. Additionally contain methods which save the received data.
-		We need one child for each sensor as each different sensor
+		We use one child for each sensor as each different sensor
 		provides different data, and must be saved in a different
 		format. So we have the following children:
 
@@ -575,7 +575,7 @@ Power is an enormous issue on wearable devices, as the form factor drastically
 constrains the size of the battery. Hence developers have explicitly designed
 Wear OS to limit power usage of any application as much as possible. 
 As part of these optimisations Wear OS automatically suspends any application
-if it thinks they are not being used. While this is useful for most users, my
+it thinks is not being used. While this is useful for most users, my
 application needs to run continuously without interruption.
 
 Initially in testing there were long periods of time where no sensor values
@@ -583,13 +583,23 @@ were being recorded, due to the application being suspended.
 
 To fix this issue, a wake lock was included. Once a wake lock is acquired, the
 OS does not suspend the application. I added one which is acquired every time
-a recording is started, and released when the recording ends.
+a recording is started, and released when the recording ends. The following
+code obtains the wake lock:
+
+\begin{lstlisting}[language=Kotlin]
+// Obtain a wakelock to ensure the listeners are active while updates are being provided
+mWakeLock = (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+	newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ppgrecorder:ListenerLock").apply {
+		acquire()
+	}
+}
+\end{lstlisting}
 
 \subparagraph{Sampling Rate}
 
 When I subscribe to values from the PPG sensor and accelerometer sensors, the
 API asks for a parameter - sampling period, which is the amount of delay we
-want between sensor readings being delivered. In practise, Android only uses
+want between sensor readings being delivered. In practice, Android only uses
 this number as a hint - values may be provided at a higher or lower rate.
 
 Additionally, Android does not expose the actual rate at which sensor values
@@ -727,7 +737,8 @@ click transmitted to a Google Drive so it can be analysed.
 In order to evaluate this project, I need to known my actual heart-rate. This
 is done using a portable electrocardiogram (ECG) chest strap, the Bitium Faros
 360. It sits on your chest, and records the voltage changes across the skin.
-Peaks in the signal indicate that the heart is beating. The device is setup with a configuration 
+When your heart beats, the muscles within cause voltage spikes which are
+picked up by the ECG. The device is setup with a configuration 
 file, where I choose to enable
 the accelerometer, and set the ECG to sample at a rate of 500 hz.
 
@@ -838,24 +849,26 @@ algorithm takes. Correct range gives the range of the time period we want to
 scan once we have found an initial peak, in order to find the actual peak. The
 code is included here:
 \begin{lstlisting}[language=Python]
-def fastCorrelate(f, g, freq, initTimeGap = 0.25, searchBound = 3):
+def fast_correlate(f, g, freq, init_time_gap = 0.25, search_bound = 3):
     """
-    Calculate cross correlation c of two numpy arrays, as defined by c[k] = sum_n (f[n+k] * g[n])
-    using optimized method which does an initial correlation at a lower resolution and then hones in on the solution.
+    Calculate cross correlation c of two numpy arrays, as defined by 
+    c[k] = sum_n (f[n+k] * g[n]) using optimized method 
+    which does an initial correlation at a lower resolution and then 
+    hones in on the solution.
 
     Parameters
     ----------
     f, g : numpy arrays
-        Input signals.
+    Input signals, resampled to ensure they're at the same frequency.
 
     freq : float
         The frequency of the signals.
 
-    initTimeGap : float
-        Interval at which to perform correlation intially in seconds. 
+    init_time_gap : float
+        Interval at which to perform correlation initally in seconds. 
 
-    searchBound : float
-        Bound wihtin which we search for the solution once we have made an initial pass.
+    search_bound : float
+        Bound within which we search for the solution once we have made an initial pass.
         
 
     Returns
@@ -872,17 +885,17 @@ def fastCorrelate(f, g, freq, initTimeGap = 0.25, searchBound = 3):
 
     length = f.size - g.size
 
-    gap = int(initTimeGap * freq)
+    gap = int(init_time_gap * freq)
 
     c = np.zeros((length))
     for k in range(0, length, gap):
         c[k] = np.sum(f[k : k + g.size] * g)
 
-    maxPos = np.argmax(c)
-    bound = searchBound * freq
-    lowerBound = max(maxPos - bound, 0)
-    upperBound = min(maxPos + bound, length)
-    for k in range(lowerBound, upperBound, 1):
+    max_pos = np.argmax(c)
+    bound = search_bound * freq
+    lower_bound = max(max_pos - bound, 0)
+    upper_bound = min(max_pos + bound, length)
+    for k in range(lower_bound, upper_bound, 1):
         c[k] = np.sum(f[k : k + g.size] * g)
 
 
@@ -1030,44 +1043,44 @@ where \(w_n\) is the \(n\)th filter weight, and \(\nabla E(y^2)[n]\) is the
 The LMS code I produced is as follows:
 
 \begin{lstlisting}[language=Python]
-def lms(ppg, accel):
-  """ 
+def lms_filter(ppg, accel, K=15, step=1):
+  """
   Run a least mean squares adaptive filter to remove noise from the signal
   that we know is correlation to the reference signal.
 
-  Inputs
+  Parameters
   ------------
    - ppg - the signal we want to remove noise from
    - accel - a signal we think is correlated with the noise
+   - K - number of taps to use in the filter
+   - step - step size to use
 
-  Outputs
+  Returns
   ------------
    - filtered - the signal with noise removed
   """
 
   N = ppg.size          # Size of PPG signal
-  K = 15                # Number of filter taps
-  step = 0.001          # Step size for LMS
 
   # Preprocessing
   freq = ppg.getFrequency()
   accel = accel.resample(freq)
   accel = accel.crop(N)
 
+  accel = accel.getValues()
+  ppg = ppg.getValues()
+
   w = np.zeros(K)      # Initial filter
   e = np.zeros(N-K)    # Initial error
 
   for n in range(0, N-K):
-    acceln = accel[n+K:n:-1]
-    en = ppg[n+K] - np.dot(acceln, w)    
-    w = w + step * en * acceln
-    e[n] = en
+    accel_n = accel[n+K:n:-1]
+    e_n = ppg[n+K] - np.dot(accel_n, w)          
+    w = w + step * e_n * accel_n
 
+    e[n] = e_n
 
-  motion_noise = signal.convolve(accel, w)
-  estimated_heart = ppg - motionNoise
-
-  return estimated_heart
+  return data.getSignal(e_n, freq)
 \end{lstlisting}
 
 Step size must be chosen very carefully, as if it is too large there is a risk
@@ -1077,8 +1090,21 @@ iterations. The situation is made worse as the ideal step size changes with
 respect to the power of the input, making it very difficult to choose a step
 size which gives stability.
 
-To solve these stability issues, NLMS was introduced. It is the same as LMS, except you normalize the input power each
+To solve these stability issues, NLMS was introduced. It is the same as LMS, 
+except you normalize the input power each
 iteration. This makes choosing a step size which gives stability a lot easier.
+The for loop from LMS above now looks like this:
+
+\begin{lstlisting}[language=Python]
+for n in range(0, N-K):
+	accel_n = accel[n+K:n:-1]
+	e_n = ppg[n+K] - np.dot(accel_n, w)          
+
+	norm_factor = 1 / (np.dot(accel_n, accel_n) + 0.001)
+	w = w + step * e_n * accel_n * norm_factor
+
+	e[n] = e_n
+\end{lstlisting}
 
 So now we have a stable adaptive filter, which will allow us to tune a filter
 that will remove motion noise from our PPG signal.
@@ -1099,8 +1125,12 @@ If we can find the peaks in the signal, we can count them up and divide by the
 time period we count those peaks within, giving us a heart rate. One way we
 can define peaks is as local maxima.
 
-The local maxima in a signal are defined as samples which are larger than both
-neighbouring samples. Finding local maxima is an easy problem to solve - 
+The local maxima in a signal are defined as samples (or successive samples of
+the same amplitude) which are larger than both
+neighbouring samples. In the case where we have multiple samples of the same
+amplitude, the middle
+sample position is returned (rounded down if necessary).
+Finding local maxima is an easy problem to solve - 
 intuitively, we can create an algorithm which iterates through the samples,
 comparing each sample to it's neighbours, which has complexity \(O(n)\).
 
@@ -1121,13 +1151,17 @@ very little variation \cite{michael17}, and hence in our case we can assume that
 beats regularly. The aim of this method is to use this assumption, along with
 minimum and maximum heart-rate to better detect heart-beats.
 
-The method begins by calculating an initial set of peaks, by calculating the
-rolling mean of the signal, and marking points above that mean as peaks. Then,
-we compute the standard deviation of the time between these peaks (peak-peak
-interval). Then, we iteratively increase the rolling mean and again calculate
+The method begins by by calculating the
+threshold, initially set as the rolling mean of the signal. It calculates a
+set of initial peak
+positions by finding positions where our signal crosses the threshold.
+Then, it computes the standard deviation of the time between these peaks (peak-peak
+intervals). Next, it iteratively increases the threshold and again calculates
 the peaks, along with
-the standard deviation of their intervals. The idea is every time we increase the rolling mean we 
-exclude more peaks. Then at the end, the peaks we actually select are the peaks which give a reasonable
+the standard deviation of their intervals. The idea is every time it increases
+the threshold we 
+exclude more peaks. Then at the end, the peaks it actually selects are the peaks which give 
+a reasonable
 heart-rate (in the range 20-240 bpm), and have the smallest standard deviation.
 
 The code I produced to do this is below:
@@ -1141,30 +1175,29 @@ min_sd = np.inf
 current_peaks = []
 
 for perc in percs:
-    current_mov_ave = mov_ave + mov_ave * perc / 100 
-    
+    threshold = mov_ave + mov_ave * perc / 100
+
     #Find points above current moving average 
-    x_peaks = (signal_vals > current_mov_ave).nonzero()[0]
+    x_peaks = (signal_vals > threshold).nonzero()[0]
     y_peaks = signal_vals[x_peaks]
-    peak_edges = (np.diff(x_peaks) > 1).nonzero()[0] + 1 
-    
+    peak_edges = (np.diff(x_peaks) > 1).nonzero()[0] + 1
+
     # find the maximum between the peak edges. 
     peaks = []
-    for i in range(len(peak_edges) - 1): 
+    for i in range(len(peak_edges) - 1):
         ys = y_peaks[peak_edges[i]:peak_edges[i+1]].tolist()
         if len(ys) > 0:
-    	peaks.append(x_peaks[peak_edges[i] + ys.index(max(ys))])
-    
+            peaks.append(x_peaks[peak_edges[i] + ys.index(max(ys))])
+
     # Calculate standard deviation of the peak peak intervals
     intervals = np.diff(peaks) / signal.getFrequency()
     sd = np.std(intervals)
-    
-    if sd < min_sd:
+
+    if sd < min_sd and check_valid_hr(signal, peaks):
         min_sd = sd
         current_peaks = peaks
 
 return np.array(current_peaks)
-
 \end{lstlisting}
 
 \section{Joint Sparse Spectrum Reconstruction}
@@ -1238,9 +1271,9 @@ the MFOCUSS algorithm and calculating the spectrums together is that the
 frequency bins are much more likely to overlap between the accelerometer and
 the PPG, where there is motion noise. 
 
-The paper which describes JOSS recommends, for each frequency in the spectrum,
+The paper which describes JOSS \cite{Zhang15.2} recommends, for each frequency in the spectrum,
 subtracting the maximum of all the accelerometer frequency bins from the PPG's
-frequency bin. Additionally, it reccommends settting all frequency bins below 
+frequency bin. Additionally, it recommends setting all frequency bins below 
 the maximum frequency bin divided by four to zero, in order to sparsify the array.
 This is the relevant code:
 
@@ -1280,7 +1313,8 @@ heart-rate is used again as the heart-rate is likely lost in noise. If there
 are multiple peaks, the algorithm takes the largest.
 
 To avoid the heart-rate getting stuck at one value, a validation step is
-included. If the bpm reported is the same for more than 3 succesive runs, then
+included. If the bpm reported is the same for more than 3 successive
+iterations, then
 validation is triggered. To validate, we return the closest peak to the latest
 recorded run, the code that finds this is below:
 
