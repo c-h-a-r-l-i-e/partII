@@ -7,25 +7,25 @@ import filtering
 import data
 from scipy import signal
 
-def lms(ppg, accel):
-  """
-  Run a least mean squares adaptive filter to remove noise from the signal
-  that we know is correlation to the reference signal.
 
-  Inputs
+def nlms_filter(ppg, accel, K=15, step=1):
+  """
+  Run a normalised least mean squares adaptive filter to remove noise from the signal
+  that we know is correlated to the reference signal.
+
+  Parameters
   ------------
    - ppg - the signal we want to remove noise from
    - accel - a signal we think is correlated with the noise
+   - K - number of taps to use in the filter
+   - step - step size to use
 
-  Outputs
+  Returns
   ------------
    - filtered - the signal with noise removed
   """
 
-
   N = ppg.size          # Size of PPG signal
-  K = 15                # Number of filter taps
-  step = 0.001          # Step size for LMS
 
   # Preprocessing
   freq = ppg.getFrequency()
@@ -39,17 +39,54 @@ def lms(ppg, accel):
   e = np.zeros(N-K)    # Initial error
 
   for n in range(0, N-K):
-    acceln = accel[n+K:n:-1]
-    en = ppg[n+K] - np.dot(acceln, w)          
-    w = w + step * en * acceln
+    accel_n = accel[n+K:n:-1]
+    e_n = ppg[n+K] - np.dot(accel_n, w)          
 
-    e[n] = en
+    norm_factor = 1 / (np.dot(accel_n, accel_n) + 0.001)
+    w = w + step * e_n * accel_n * norm_factor
 
+    e[n] = e_n
 
-  motionNoise = signal.convolve(accel, w)
-  estimatedHeart = ppg - motionNoise
+  return data.getSignal(e, freq)
 
-  return data.getSignal(estimatedHeart, freq)
+def lms_filter(ppg, accel, K=15, step=1):
+  """
+  Run a least mean squares adaptive filter to remove noise from the signal
+  that we know is correlation to the reference signal.
+
+  Parameters
+  ------------
+   - ppg - the signal we want to remove noise from
+   - accel - a signal we think is correlated with the noise
+   - K - number of taps to use in the filter
+   - step - step size to use
+
+  Returns
+  ------------
+   - filtered - the signal with noise removed
+  """
+
+  N = ppg.size          # Size of PPG signal
+
+  # Preprocessing
+  freq = ppg.getFrequency()
+  accel = accel.resample(freq)
+  accel = accel.crop(N)
+
+  accel = accel.getValues()
+  ppg = ppg.getValues()
+
+  w = np.zeros(K)      # Initial filter
+  e = np.zeros(N-K)    # Initial error
+
+  for n in range(0, N-K):
+    accel_n = accel[n+K:n:-1]
+    e_n = ppg[n+K] - np.dot(accel_n, w)          
+    w = w + step * e_n * accel_n
+
+    e[n] = e_n
+
+  return data.getSignal(e_n, freq)
 
 
 
@@ -69,13 +106,6 @@ def lms(ppg, accel):
   plt.title('Unknown filter')
   plt.stem(h)
   """
-
-
-  if False:
-    if (False and n % 50 == 0):
-      plt.figure()
-      plt.title('Estimated filter at iteration %d' % n)
-      plt.stem(w)
 
   """
   plt.figure()
@@ -102,16 +132,12 @@ def adaptiveFilter(signal, referenceMotion, step=1, nlms=True, M = 20):
     referenceMotion = referenceMotion.crop(signal.size)
 
 
+
     if nlms:
-        y, e, w = adf.nlms(referenceMotion.getValues(), signal.getValues(),
-                M, step, returnCoeffs=True)
+        filtered = nlms_filter(signal, referenceMotion, step=step, K=M)
     else:
-        y, e, w = adf.lms(referenceMotion.getValues(), signal.getValues(),
-                M, step, returnCoeffs=True)
+        filtered = lms_filter(signal, referenceMotion, step=step, K=M)
 
-
-
-    filtered = data.getSignal(e, freq)
     return filtered
 
 

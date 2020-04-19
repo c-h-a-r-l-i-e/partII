@@ -93,10 +93,10 @@ def find_peaks_min_sd(signal, window_size=0.75):
     current_peaks = []
 
     for perc in percs:
-        current_mov_ave = mov_ave + mov_ave * perc / 100
+        threshold = mov_ave + mov_ave * perc / 100
 
         #Find points above current moving average 
-        x_peaks = (signal_vals > current_mov_ave).nonzero()[0]
+        x_peaks = (signal_vals > threshold).nonzero()[0]
         y_peaks = signal_vals[x_peaks]
         peak_edges = (np.diff(x_peaks) > 1).nonzero()[0] + 1
 
@@ -111,11 +111,21 @@ def find_peaks_min_sd(signal, window_size=0.75):
         intervals = np.diff(peaks) / signal.getFrequency()
         sd = np.std(intervals)
 
-        if sd < min_sd:
+        if sd < min_sd and check_valid_hr(signal, peaks):
             min_sd = sd
             current_peaks = peaks
 
     return np.array(current_peaks)
+
+def check_valid_hr(signal, peaks):
+    """
+    Validate that the peaks given provide a heart-rate within a reasonable
+    range (between 40 and 240 bpm).
+    """
+    rate = len(peaks)/ (signal.getValues().size / signal.getFrequency()) * 60
+    valid =  rate >= 40 and rate <= 240
+    return valid
+
 
 def get_rate_min_sd(signal):
     peaks = find_peaks_min_sd(signal)
