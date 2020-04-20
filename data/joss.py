@@ -9,7 +9,6 @@ import heartpy as hp
 import matlab.engine
 
 DEBUG = False
-VALIDATE = True
 
 def get_ecg_bpm(ecg, start, window_size = 8, shift=2):
     freq = ecg.frequency
@@ -205,6 +204,24 @@ def ssr(y, freq, N, eng):
 
     
 def joss_spt(spectrum, freq, prev_loc, prev_bpm, trap_count):
+    """
+    Run spectral peak tracking
+
+    Parameters
+    ----------
+     - spectrum : the spectrum of the signal
+     - freq : sampling frequency
+     - prev_loc : previous index of heart-rate bpm
+     - prev_bpm : previous bpm calculated
+     - trap_count : number of times bpm has been the same
+
+    Returns
+    ----------
+     - loc : location of bpm calculated
+     - bpm : bpm calculated
+     - trap_count : number of times bpm has been the same
+
+    """
     deltas = [15, 25]
 
     N = spectrum.size
@@ -241,7 +258,7 @@ def joss_spt(spectrum, freq, prev_loc, prev_bpm, trap_count):
     # validate results
     if loc == prev_loc:
         trap_count += 1
-        if trap_count > 10 and VALIDATE:
+        if trap_count > 10:
             loc = discover_peak(spectrum, prev_loc)
             bpm = 60 * loc / N * freq
 
