@@ -223,12 +223,12 @@ receive light on the other side, as the wrist is far too large. Hence, instead
 of monitoring the absorption of light by the skin, we monitor the reflection
 of light by the skin. A light is shone into the wrist, and sensors nearby
 monitor how much is reflected back. When the wrist is full of blood, more
-light is reflected back as blood scatters lights.
+light is reflected back as blood scatters light.
 
 We know now how the signals are recorded, but we have not yet explored the
 signal that is actually received from this technique. In figure
 \ref{fig:typicalppgsignal} we see a
-clean PPG recording. There are two peaks in the data - a sytolic peak and a
+clean PPG recording. There are two peaks in the data - a systolic peak and a
 diastolic peak. The systolic peak represents the point at which the heart has
 beat - and hence pushed blood through the body. The challenge is to find this
 peak.
@@ -338,7 +338,7 @@ discussing the algorithms which have been proposed in various papers.
 
 TROIKA \cite{Zhang15} is a general framework for removing motion artifacts
 from PPG signals taken when exercising. It consists of signal decomposiTion
-, sparse signal RecOnstruction and spectral peaK trAcking, each of which I will
+, sparse signal RecOnstructIon and spectral peaK trAcking, each of which I will
 explain here.
 
 Signal decomposition is where a signal \(s\) is split into \(Q\) components
@@ -431,7 +431,7 @@ correct. In PARHELIA, there are five steps, as follows:
 	\item Initialisation - generate particles uniformly in the range 60
 		bpm and 170 bpm.
 
-	\item Prediction - every iteration particles are moved randomly based on a normal
+	\item Prediction - every iteration, particles are moved randomly based on a normal
 		distribution with standard deviation 6 bpm.
 
 	\item Weight calculation - the weight of a particle is increased if
@@ -465,7 +465,9 @@ I chose to implement the project in several stages:
 	\item Investigate the use of different filters to remove unwanted frequencies.
 
 	\item Implement methods which will remove motion noise from the PPG
-		signal, given that noise is to correlated accerometer signals.
+		signal. I may use the accelerometer, which provides a signal
+		that is correlated to
+		the motion noise.
 
 	\item Develop algorithms which will calculate a heart-rate, given a
 		PPG signal.
@@ -518,7 +520,7 @@ The program was split into classes as described here:
 	\item \emph{SensorListener} - interface which overrides the Android
 		\emph{SensorEventListener}. Contains methods which
 		are called by the WearOS system whenever new sensor data comes
-		in. Additionally contain methods which save the received data.
+		in. Additionally has a method which saves the received data.
 		We use one child for each sensor as each different sensor
 		provides different data, and must be saved in a different
 		format. So we have the following children:
@@ -651,7 +653,8 @@ To connect the watch to the server I needed to create a local access point on th
 Raspberry Pi. The
 packages I used to do this were \emph{hostapd} and \emph{dnsmasq}. 
 
-The package \emph{hostapd} is used to setup the access point, so I used it to configure
+The package \emph{hostapd} is used to setup the access point, so I used it to
+configure the
 SSID and password it can be accessed on. 
 
 The package \emph{dnsmasq} is used to setup the DHCP service, assigning IP
@@ -729,7 +732,7 @@ click transmitted to a Google Drive so it can be analysed.
 
 \subsection{ECG}
 
-In order to evaluate this project, I need to known my actual heart-rate. This
+In order to evaluate this project, I need to know my actual heart-rate. This
 is done using a portable electrocardiogram (ECG) chest strap, the Bitium Faros
 360. It sits on your chest, and records the voltage changes across the skin.
 When your heart beats, the muscles within cause voltage spikes which are
@@ -826,8 +829,8 @@ between the two accelerometer signals over time. It is clear that there is one
 peak which is above all the others, where the jumps line up perfectly.
 However, in addition we can see that there is a significant rise in cross
 correlation around the peak, where we are seeing peaks due to one or two of
-the jumps aligning. This is useful as we hence do not need to scan at each
-possible time difference, instead we can to a lower resolution initial scan.
+the jumps aligning. This is useful as we do not need to scan at each
+possible time difference, instead we can do an initial, lower resolution scan.
 After this initial scan is done, we find the peak, and check each possible
 time difference around the lower resolution peak to find the actual peak.
 
@@ -1087,7 +1090,7 @@ def lms_filter(ppg, accel, K=15, step=1):
 
 Step size must be chosen very carefully, as if it is too large there is a risk
 of LMS missing the solution as it overcompensates for the gradient. If it is
-too small, then the algorithm becomes too expensive as we need many more
+too small, then the algorithm becomes too slow as we need many more
 iterations. The situation is made worse as the ideal step size changes with
 respect to the power of the input, making it very difficult to choose a step
 size which gives stability.
@@ -1417,8 +1420,8 @@ current heart-rate.
 
 As an extension, I wanted to collect heart-rate from earbuds containing PPG
 sensors. In theory, they 
-are less effected by motion noise
-because they are not affected by arm movement. Additionally, the ear has a rich set
+are less affected by motion noise
+because they are not influenced by arm movement. Additionally, the ear has a rich set
 of veins which is perfect for PPG analysis. For the purposes of this project I used
 a set of Jabra elite sport earbuds, which have a PPG sensor under the right
 bud - see figure \ref{fig:jabra}. 
