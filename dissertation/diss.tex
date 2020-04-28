@@ -174,9 +174,9 @@ cardiac cycle are detected through the changes in the reflected light
 intensity. PPG sensors are cheaper than ECG sensors, and hence are 
 available in a variety of products, particularly smartwatches. This 
 innovation has bought a new wave of advanced training and monitoring onto
-the wrists of any runner.
+the wrists of many runners.
 
-Switching from ECG to PPG is not without flaws though - ECG sensors generally return a
+Switching from ECG to PPG is not without problems though - ECG sensors generally return a
 clean signal, as opposed to PPG signals which are contaminated with
 noise.
 
@@ -187,8 +187,10 @@ motion artifacts (MAs). Fortunately, smartwatches contain other sensors, such
 as accelerometers and gyroscopes which can assist in predicting the presence of 
 MAs, and hence compensate for them.
 
-My task is to research and develop a heart rate detection algorithm
-for smartwatches worn during running. 
+My goal is to research and develop a heart rate detection algorithm
+for smartwatches worn during running, and to demonstrate it is accurate.
+
+
 
 \chapter{Preparation}
 
@@ -276,7 +278,7 @@ diagram. This plots the amount of gain applied to each frequency. A gain of
 zero means the signal is removed, a gain of one means the signal is unchanged.
 The characteristics displayed are as follows.
 
-The passband is the range of frequencies we would like to remain. In an ideal
+The passband is the range of frequencies we would like to retain. In an ideal
 filter, there is no loss within the passband.
 
 Passband ripple describes the variation in amplitude \emph{within} the
@@ -354,7 +356,7 @@ gives higher resolution frequency information, allowing more precise
 identification of peaks.
 
 Spectral peak tracking uses the current SSR spectrum, and the last known
-heart-rate. In the paper, they use an 8s window, with 2 s shifts, which means
+heart-rate. In the paper, they use an 8 s window, with 2 s shifts, which means
 the algorithm is run on one 8 s segment, before being shifted 2 s forwards then
 run again.
 The windows of the signal overlap by 6 s, meaning that the heart-rate
@@ -623,7 +625,7 @@ the watch.
 
 \subsection{Uploading Recordings}
 
-Now data has been recorded, the values must be uploaded somewhere to enable
+Now that data has been recorded, the values must be uploaded somewhere to enable
 later analysis. I created a server which would run on a Raspberry Pi that the
 watch could connect to over the local network. The files would be passed to
 the server, and from there the files are uploaded to Google Drive where they
@@ -2266,6 +2268,7 @@ the rate drops to zero due to lack of contact.
 \chapter{Conclusion}
 
 I have met all the success criteria set out in my project proposal.
+Additionally I have completed two extensions.
 
 \paragraph{Summary}
 
@@ -2276,9 +2279,9 @@ finding the optimal parameters for my usage. To remove motion noise, I
 investigated and implemented two adaptive noise cancellation techniques. Then
 to calculate the heart-rate I looked into two different methods. I also
 looked at using joint spectrum calculations to estimate heart-rate and remove
-motion noise.
+motion noise, as an extension.
 
-Finally, I showed that putting heart-rate sensors into earbuds is a promising
+Finally, as an extension I showed that putting heart-rate sensors into earbuds is a promising
 technique, although the signal can cut out. Hence, my developed sensor fusion
 technique which combines heart-rate from the earbuds and from a wrist-watch
 provides a better signal than either alone.
