@@ -1,0 +1,71 @@
+\contentsline {chapter}{\numberline {1}Introduction}{8}{chapter.1}
+\contentsline {chapter}{\numberline {2}Preparation}{9}{chapter.2}
+\contentsline {section}{\numberline {2.1}Photoplethysmography (PPG)}{9}{section.2.1}
+\contentsline {section}{\numberline {2.2}Techniques}{10}{section.2.2}
+\contentsline {subsection}{\numberline {2.2.1}Filtering}{10}{subsection.2.2.1}
+\contentsline {subsection}{\numberline {2.2.2}Spectrum}{11}{subsection.2.2.2}
+\contentsline {section}{\numberline {2.3}Current Algorithms}{12}{section.2.3}
+\contentsline {subsection}{\numberline {2.3.1}TROIKA}{12}{subsection.2.3.1}
+\contentsline {subsection}{\numberline {2.3.2}Finite State Machine}{13}{subsection.2.3.2}
+\contentsline {subsection}{\numberline {2.3.3}JOSS}{13}{subsection.2.3.3}
+\contentsline {subsection}{\numberline {2.3.4}PARHELIA}{13}{subsection.2.3.4}
+\contentsline {section}{\numberline {2.4}Development Strategy}{14}{section.2.4}
+\contentsline {chapter}{\numberline {3}Implementation}{15}{chapter.3}
+\contentsline {section}{\numberline {3.1}Gathering Data}{15}{section.3.1}
+\contentsline {subsection}{\numberline {3.1.1}Wear OS Development}{15}{subsection.3.1.1}
+\contentsline {paragraph}{Language Choices}{15}{section*.13}
+\contentsline {paragraph}{Structure}{15}{section*.14}
+\contentsline {paragraph}{Storing Recordings}{16}{section*.15}
+\contentsline {paragraph}{Interface}{16}{section*.16}
+\contentsline {paragraph}{Problems}{16}{section*.18}
+\contentsline {subparagraph}{Power Saving}{16}{section*.19}
+\contentsline {subparagraph}{Sampling Rate}{17}{section*.20}
+\contentsline {subsection}{\numberline {3.1.2}Uploading Recordings}{17}{subsection.3.1.2}
+\contentsline {subsubsection}{Changes to Wear OS Application}{17}{section*.22}
+\contentsline {subsection}{\numberline {3.1.3}Raspberry Pi Access Point}{17}{subsection.3.1.3}
+\contentsline {subsubsection}{Flask Web Application on Raspberry Pi}{18}{section*.23}
+\contentsline {subsubsection}{Python Scripts to Upload to Google Drive}{18}{section*.24}
+\contentsline {subsection}{\numberline {3.1.4}ECG}{19}{subsection.3.1.4}
+\contentsline {subsection}{\numberline {3.1.5}Synchronising Signals}{19}{subsection.3.1.5}
+\contentsline {subsection}{\numberline {3.1.6}Informed Synchronisation}{20}{subsection.3.1.6}
+\contentsline {section}{\numberline {3.2}Filtering}{22}{section.3.2}
+\contentsline {subsection}{\numberline {3.2.1}Butterworth Filter}{22}{subsection.3.2.1}
+\contentsline {subsection}{\numberline {3.2.2}Chebyshev Filter}{23}{subsection.3.2.2}
+\contentsline {section}{\numberline {3.3}Motion Artefact Reduction}{24}{section.3.3}
+\contentsline {subsection}{\numberline {3.3.1}Adaptive Noise Cancellation}{24}{subsection.3.3.1}
+\contentsline {section}{\numberline {3.4}Heart Rate Calculation}{26}{section.3.4}
+\contentsline {subsection}{\numberline {3.4.1}Local Maxima}{26}{subsection.3.4.1}
+\contentsline {subsection}{\numberline {3.4.2}Peak-Peak Standard Deviation Minimization}{27}{subsection.3.4.2}
+\contentsline {section}{\numberline {3.5}Joint Sparse Spectrum Reconstruction}{28}{section.3.5}
+\contentsline {subsection}{\numberline {3.5.1}Joint Sparse Spectrum Reconstruction}{28}{subsection.3.5.1}
+\contentsline {subsection}{\numberline {3.5.2}Spectral Peak Tracking}{29}{subsection.3.5.2}
+\contentsline {section}{\numberline {3.6}Earbuds}{31}{section.3.6}
+\contentsline {subsection}{\numberline {3.6.1}Gathering data}{31}{subsection.3.6.1}
+\contentsline {paragraph}{Generic Attribute Profile (GATT)}{32}{section*.30}
+\contentsline {paragraph}{GATT Server}{32}{section*.31}
+\contentsline {paragraph}{GATT Client}{32}{section*.32}
+\contentsline {paragraph}{Characteristics}{32}{section*.33}
+\contentsline {paragraph}{Services}{32}{section*.34}
+\contentsline {paragraph}{Characteristic Value Notifications}{32}{section*.35}
+\contentsline {subsubsection}{Android Services}{33}{section*.37}
+\contentsline {subsection}{\numberline {3.6.2}Sensor Fusion}{34}{subsection.3.6.2}
+\contentsline {subsection}{\numberline {3.6.3}Kalman Filter}{34}{subsection.3.6.3}
+\contentsline {chapter}{\numberline {4}Evaluation}{36}{chapter.4}
+\contentsline {section}{\numberline {4.1}Gathering Data}{36}{section.4.1}
+\contentsline {subsection}{\numberline {4.1.1}Synchronising Signals}{36}{subsection.4.1.1}
+\contentsline {section}{\numberline {4.2}Filtering}{37}{section.4.2}
+\contentsline {subsection}{\numberline {4.2.1}Butterworth Filter}{38}{subsection.4.2.1}
+\contentsline {subsection}{\numberline {4.2.2}Chebyshev Type II Filter}{39}{subsection.4.2.2}
+\contentsline {section}{\numberline {4.3}Motion Artefact Reduction}{41}{section.4.3}
+\contentsline {subsection}{\numberline {4.3.1}LMS}{41}{subsection.4.3.1}
+\contentsline {subsection}{\numberline {4.3.2}NLMS}{43}{subsection.4.3.2}
+\contentsline {section}{\numberline {4.4}Heart Rate Calculation}{45}{section.4.4}
+\contentsline {section}{\numberline {4.5}Joint Sparse Spectrum Reconstruction}{47}{section.4.5}
+\contentsline {section}{\numberline {4.6}Earbuds}{49}{section.4.6}
+\contentsline {subsection}{\numberline {4.6.1}Problem}{49}{subsection.4.6.1}
+\contentsline {subsection}{\numberline {4.6.2}Sensor Fusion}{49}{subsection.4.6.2}
+\contentsline {chapter}{\numberline {5}Conclusion}{51}{chapter.5}
+\contentsline {paragraph}{Summary}{51}{section*.60}
+\contentsline {paragraph}{Issues}{51}{section*.61}
+\contentsline {chapter}{Bibliography}{51}{section*.61}
+\contentsline {chapter}{\numberline {A}Project Proposal}{54}{appendix.A}

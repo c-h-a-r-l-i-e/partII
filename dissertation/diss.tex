@@ -1,5 +1,5 @@
 % Template for a Computer Science Tripos Part II project dissertation
-\documentclass[12pt,a4paper,twoside,openright]{report}
+\documentclass[12pt,a4paper,twoside,openany]{report}
 \usepackage[pdfborder={0 0 0}]{hyperref}    % turns references into hyperlinks
 \usepackage[margin=25mm]{geometry}  % adjusts page layout
 \usepackage[dvipsnames]{xcolor}
@@ -90,6 +90,24 @@ King's College \\[5mm]
 \today  % today's date
 \end{center}
 
+\newpage
+\section*{Declaration}
+
+I, Charlie Maclean of King's College, being a candidate for Part II of the 
+Computer Science Tripos, hereby declare that this dissertation and the work 
+described in it are my own work, unaided except as may be specified below, 
+and that the dissertation does not contain material that has already been 
+used to any substantial extent for a comparable purpose.
+
+I am content for my dissertation to be made available to the students and staff
+of the University. 
+
+\bigskip
+\leftline{Signed [signature]}
+
+\medskip
+\leftline{Date [date]}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Proforma, table of contents and list of figures
 
@@ -99,17 +117,16 @@ King's College \\[5mm]
 
 {\large
 \begin{tabular}{ll}
-Name:               & \bf Charlie Maclean                       \\
-College:            & \bf King's College			\\
-Project Title:      & \bf Synthesis of Heart-Rate Detection Methods	 \\
-Examination:        & \bf Computer Science Tripos -- Part II, July 2020  \\
-Word Count:         & \bf TODO\footnotemark[1]		\\
-Project Originator: & Dr Robert Harle                   \\
-Supervisor:         & Dr Robert Harle                   \\ 
+Candidate Number:               & \bf 2410C    	                   	\\
+Project Title:      & \bf Synthesis of Heart-Rate Detection Methods	\\
+Examination:        & \bf Computer Science Tripos -- Part II, July 2020 \\
+Word Count:         & \bf 10,927					\\
+Codebase Line Count:& \bf 4,119\footnotemark[1]				\\
+Project Originator: & \bf Dr Robert Harle                   		\\
+Supervisor:         & \bf Dr Robert Harle                   		\\ 
 \end{tabular}
 }
-\footnotetext[1]{This word count was computed
-by \texttt{detex diss.tex | tr -cd '0-9A-Za-z $\tt\backslash$n' | wc -w}
+\footnotetext[1]{Own code, excluding blank lines.
 }
 \stepcounter{footnote}
 
@@ -128,23 +145,8 @@ All that has been completed appears in this dissertation.
 
 \section*{Special Difficulties}
 
-Learning how to incorporate encapulated postscript into a \LaTeX\
-document on both Ubuntu Linux and OS X.
+None.
  
-\newpage
-\section*{Declaration}
-
-I, Charlie Maclean of King's College, being a candidate for Part II of the 
-Computer Science Tripos, hereby declare that this dissertation and the work 
-described in it are my own work, unaided except as may be specified below, 
-and that the dissertation does not contain material that has already been 
-used to any substantial extent for a comparable purpose.
-
-\bigskip
-\leftline{Signed [signature]}
-
-\medskip
-\leftline{Date [date]}
 
 \tableofcontents
 
