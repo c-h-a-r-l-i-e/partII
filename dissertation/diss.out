@@ -33,20 +33,22 @@
 \BOOKMARK [2][-]{subsection.3.6.1}{Gathering data}{section.3.6}% 33
 \BOOKMARK [2][-]{subsection.3.6.2}{Sensor Fusion}{section.3.6}% 34
 \BOOKMARK [2][-]{subsection.3.6.3}{Kalman Filter}{section.3.6}% 35
-\BOOKMARK [0][-]{chapter.4}{Evaluation}{}% 36
-\BOOKMARK [1][-]{section.4.1}{Gathering Data}{chapter.4}% 37
-\BOOKMARK [2][-]{subsection.4.1.1}{Synchronising Signals}{section.4.1}% 38
-\BOOKMARK [1][-]{section.4.2}{Filtering}{chapter.4}% 39
-\BOOKMARK [2][-]{subsection.4.2.1}{Butterworth Filter}{section.4.2}% 40
-\BOOKMARK [2][-]{subsection.4.2.2}{Chebyshev Type II Filter}{section.4.2}% 41
-\BOOKMARK [1][-]{section.4.3}{Motion Artefact Reduction}{chapter.4}% 42
-\BOOKMARK [2][-]{subsection.4.3.1}{LMS}{section.4.3}% 43
-\BOOKMARK [2][-]{subsection.4.3.2}{NLMS}{section.4.3}% 44
-\BOOKMARK [1][-]{section.4.4}{Heart Rate Calculation}{chapter.4}% 45
-\BOOKMARK [1][-]{section.4.5}{Joint Sparse Spectrum Reconstruction}{chapter.4}% 46
-\BOOKMARK [1][-]{section.4.6}{Earbuds}{chapter.4}% 47
-\BOOKMARK [2][-]{subsection.4.6.1}{Problem}{section.4.6}% 48
-\BOOKMARK [2][-]{subsection.4.6.2}{Sensor Fusion}{section.4.6}% 49
-\BOOKMARK [0][-]{chapter.5}{Conclusion}{}% 50
-\BOOKMARK [0][-]{section*.61}{Bibliography}{}% 51
-\BOOKMARK [0][-]{appendix.A}{Project Proposal}{}% 52
+\BOOKMARK [1][-]{section.3.7}{Repository Overview}{chapter.3}% 36
+\BOOKMARK [0][-]{chapter.4}{Evaluation}{}% 37
+\BOOKMARK [1][-]{section.4.1}{Gathering Data}{chapter.4}% 38
+\BOOKMARK [2][-]{subsection.4.1.1}{Synchronising Signals}{section.4.1}% 39
+\BOOKMARK [1][-]{section.4.2}{Filtering}{chapter.4}% 40
+\BOOKMARK [2][-]{subsection.4.2.1}{Butterworth Filter}{section.4.2}% 41
+\BOOKMARK [2][-]{subsection.4.2.2}{Chebyshev Type II Filter}{section.4.2}% 42
+\BOOKMARK [1][-]{section.4.3}{Motion Artefact Reduction}{chapter.4}% 43
+\BOOKMARK [2][-]{subsection.4.3.1}{LMS}{section.4.3}% 44
+\BOOKMARK [2][-]{subsection.4.3.2}{NLMS}{section.4.3}% 45
+\BOOKMARK [1][-]{section.4.4}{Heart Rate Calculation}{chapter.4}% 46
+\BOOKMARK [1][-]{section.4.5}{Joint Sparse Spectrum Reconstruction}{chapter.4}% 47
+\BOOKMARK [1][-]{section.4.6}{Earbuds}{chapter.4}% 48
+\BOOKMARK [2][-]{subsection.4.6.1}{Problem}{section.4.6}% 49
+\BOOKMARK [2][-]{subsection.4.6.2}{Sensor Fusion}{section.4.6}% 50
+\BOOKMARK [0][-]{chapter.5}{Conclusion}{}% 51
+\BOOKMARK [0][-]{section*.61}{Bibliography}{}% 52
+\BOOKMARK [1][-]{section.Alph0.1}{Repository Overview}{section*.61}% 53
+\BOOKMARK [1][-]{section.Alph0.2}{Project Proposal}{section*.61}% 54

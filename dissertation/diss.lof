@@ -14,22 +14,21 @@
 \contentsline {figure}{\numberline {3.7}{\ignorespaces Positioning of the PPG sensor on Jabra elite sport earbuds.\relax }}{31}{figure.caption.29}
 \contentsline {figure}{\numberline {3.8}{\ignorespaces Retrieving Data from Earbuds.\relax }}{33}{figure.caption.36}
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {4.1}{\ignorespaces Simulating a noisy heart-beat.\relax }}{38}{figure.caption.39}
-\contentsline {figure}{\numberline {4.2}{\ignorespaces Butterworth Filter Power Spectrums.\relax }}{39}{figure.caption.40}
-\contentsline {figure}{\numberline {4.3}{\ignorespaces The effect of Butterworth filter order on execution time.\relax }}{40}{figure.caption.41}
-\contentsline {figure}{\numberline {4.4}{\ignorespaces Chebyshev Filter Power Spectrums.\relax }}{40}{figure.caption.42}
-\contentsline {figure}{\numberline {4.5}{\ignorespaces The effect of Chebyshev and Butterworth filter order on execution time.\relax }}{41}{figure.caption.43}
-\contentsline {figure}{\numberline {4.6}{\ignorespaces Comparison of LMS Error at Different Tap Numbers.\relax }}{42}{figure.caption.45}
-\contentsline {figure}{\numberline {4.7}{\ignorespaces Comparison of LMS Error at Different Step Sizes.\relax }}{43}{figure.caption.46}
-\contentsline {figure}{\numberline {4.8}{\ignorespaces Comparing Numbers of Taps for NLMS.\relax }}{44}{figure.caption.48}
-\contentsline {figure}{\numberline {4.9}{\ignorespaces Comparing Step Size for NLMS.\relax }}{44}{figure.caption.49}
-\contentsline {figure}{\numberline {4.10}{\ignorespaces Comparison of NLMS and LMS Accuracy.\relax }}{45}{figure.caption.50}
-\contentsline {figure}{\numberline {4.11}{\ignorespaces Comparison of Peak Finding Algorithms.\relax }}{46}{figure.caption.53}
-\contentsline {figure}{\numberline {4.12}{\ignorespaces Comparison of Heart Rate Peak Calculations.\relax }}{47}{figure.caption.54}
-\contentsline {figure}{\numberline {4.13}{\ignorespaces Spectrum Reconstruction.\relax }}{47}{figure.caption.55}
-\contentsline {figure}{\numberline {4.14}{\ignorespaces Comparing Spectrum Reconstruction to NLMS.\relax }}{48}{figure.caption.56}
-\contentsline {figure}{\numberline {4.15}{\ignorespaces Plot of Earbud Heart-rate against ECG.\relax }}{49}{figure.caption.57}
-\contentsline {figure}{\numberline {4.16}{\ignorespaces Kalman Filter Demonstration.\relax }}{50}{figure.caption.58}
-\contentsline {figure}{\numberline {4.17}{\ignorespaces Sensor Fusion Error.\relax }}{50}{figure.caption.59}
-\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Simulating a noisy heart-beat.\relax }}{39}{figure.caption.39}
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Butterworth Filter Power Spectrums.\relax }}{40}{figure.caption.40}
+\contentsline {figure}{\numberline {4.3}{\ignorespaces The effect of Butterworth filter order on execution time.\relax }}{41}{figure.caption.41}
+\contentsline {figure}{\numberline {4.4}{\ignorespaces Chebyshev Filter Power Spectrums.\relax }}{41}{figure.caption.42}
+\contentsline {figure}{\numberline {4.5}{\ignorespaces The effect of Chebyshev and Butterworth filter order on execution time.\relax }}{42}{figure.caption.43}
+\contentsline {figure}{\numberline {4.6}{\ignorespaces Comparison of LMS Error at Different Tap Numbers.\relax }}{43}{figure.caption.45}
+\contentsline {figure}{\numberline {4.7}{\ignorespaces Comparison of LMS Error at Different Step Sizes.\relax }}{44}{figure.caption.46}
+\contentsline {figure}{\numberline {4.8}{\ignorespaces Comparing Numbers of Taps for NLMS.\relax }}{45}{figure.caption.48}
+\contentsline {figure}{\numberline {4.9}{\ignorespaces Comparing Step Size for NLMS.\relax }}{45}{figure.caption.49}
+\contentsline {figure}{\numberline {4.10}{\ignorespaces Comparison of NLMS and LMS Accuracy.\relax }}{46}{figure.caption.50}
+\contentsline {figure}{\numberline {4.11}{\ignorespaces Comparison of Peak Finding Algorithms.\relax }}{47}{figure.caption.53}
+\contentsline {figure}{\numberline {4.12}{\ignorespaces Comparison of Heart Rate Peak Calculations.\relax }}{48}{figure.caption.54}
+\contentsline {figure}{\numberline {4.13}{\ignorespaces Spectrum Reconstruction.\relax }}{48}{figure.caption.55}
+\contentsline {figure}{\numberline {4.14}{\ignorespaces Comparing Spectrum Reconstruction to NLMS.\relax }}{49}{figure.caption.56}
+\contentsline {figure}{\numberline {4.15}{\ignorespaces Plot of Earbud Heart-rate against ECG.\relax }}{50}{figure.caption.57}
+\contentsline {figure}{\numberline {4.16}{\ignorespaces Kalman Filter Demonstration.\relax }}{51}{figure.caption.58}
+\contentsline {figure}{\numberline {4.17}{\ignorespaces Sensor Fusion Error.\relax }}{51}{figure.caption.59}
 \addvspace {10\p@ }

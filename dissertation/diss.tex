@@ -13,6 +13,8 @@
 \usepackage{amssymb}
 \usepackage{listings}
 \usepackage{float}
+\usepackage{forest}
+\usepackage{hyperref}
 
 % Code style
 \definecolor{codegreen}{rgb}{0,0.6,0}
@@ -91,6 +93,7 @@ King's College \\[5mm]
 \end{center}
 
 \newpage
+
 \section*{Declaration}
 
 I, Charlie Maclean of King's College, being a candidate for Part II of the 
@@ -133,15 +136,26 @@ Supervisor:         & \bf Dr Robert Harle                   		\\
 
 \section*{Original Aims of the Project}
 
-To research and implement the detection of heart rate from smartwatch 
-sensors. To investigate the effectiveness of a selection of filters and 
-peak finding algorithms. To use accelerometer data to find motion artifacts
-within the data, and compare methods of removing these artifacts.
+The sensors that detect heart-rate in smart-watches are unreliable,
+particularly when running. This project aimed to design and implement methods
+to calculate a more reliable heart-rate from the signals that are provided.
 
+The project would include designing an application to run on the watch and
+collect data, along with implementing a variety of filters to clean the
+signal, and then creating methods to extract the heart-rate.
 
 \section*{Work Completed}
 
-All that has been completed appears in this dissertation.
+The project fully met the proposal’s success criteria.
+
+In the project, I designed an application to collect data; implemented and
+tuned filters to remove noise; removed motion noise and detected heart-rate. I
+then investigated using earbud sensors and how to merge signals from earbuds
+and watches.
+
+The end result is an algorithm to extract heart-rate from the watch and a
+sensor-fusion algorithm which combines the best features of both the watch and
+the earbuds, giving a heart-rate reading more accurate than either alone.
 
 \section*{Special Difficulties}
 
@@ -1241,7 +1255,7 @@ To calculate $X$, I make use of the MFOCUSS algorithm \cite{Cotter05}.
 MFOCUSS is designed to solve undetermined systems of measurement vectors, such
 as what we have. It is optimised to provide solutions where $X$ is sparse.
 I used the
-algorithm provided by Zhang, written in MATLAB, so I made use of the MATLAB
+algorithm provided by Zhang \cite{ZhangCodes}, written in MATLAB, so I made use of the MATLAB
 Engine API for Python in order to call the algorithm from my existing code. The 
 following code shows my SSR function:
 
@@ -1644,6 +1658,63 @@ def filter(self):
 In this section I have developed an application which gets heart-rate data from
 earbuds, and have implemented a Kalman filter which allows us to fuse the data
 from the watch and earbud sensors, hopefully giving us more accurate results.
+
+
+\section{Repository Overview}
+Below is an overview of the structure of my project. A more detailed version
+is given in Appendix \ref{app:repo_overview}.
+
+{\scriptsize
+\begin{forest}
+  for tree={
+    font=\ttfamily,
+    text width=\textwidth,
+    grow'=0,
+    child anchor=west,
+    parent anchor=south,
+    anchor=west,
+    calign=first,
+    edge path={
+     \noexpand\path [draw, \forestoption{edge}]
+    (!u.south west) +(7.5pt,0) |- node[fill,inner sep=1.25pt] {} (.child anchor)\forestoption{edge label};
+ },
+    before typesetting nodes={
+      if n=1
+        {insert before={[,phantom]}}
+        {}
+    },
+    fit=band,
+    before computing xy={l=15pt},
+  }
+[
+  [{\bf ppg-recorder/app/src} - Contains Android project designed for the
+	  watch
+	  [\emph{EarHRRecorder.kt} - Controls recording HR from bluetooth
+	  earbuds]
+	  [\emph{HeartDeviceService.kt} - The service which listens for
+	  updates from Bluetooth updates in the background]
+	  [\emph{MainActivity.kt} - Runs the main thread of the program]
+	  [\emph{PpgRecorder.kt} - Records data from the watch's PPG sensor]
+	  [\emph{Sync.kt} - Uploads recorded data to a server]
+  ]
+  [{\bf server} - A server to run on a raspberry pi and receive data
+	  [\emph{gdrive.py} - Uploads files to Google Drive]
+	  [\emph{server.py} - Server code built with Flask]
+  ]
+  [{\bf data} - Contains files to process the recordings in addition to the recorded data
+    [{\bf evaluation} - Programs used to evaluate the project]
+    [\emph{filtering.py} - Runs a butterworth and chebyshev filter]
+    [\emph{joss.py} - Runs spectrum reconstruction on watch data]
+    [\emph{kalmanfilter.py} - Implementation of Kalman filter]
+    [\emph{motionfilter.py} - Implementation of LMS and NLMS]
+    [\emph{peakfind.py} - Naive and sd-minimisation peakfinding functions]
+    [\emph{sync.py} - Code which combines watch and ECG data ensuring they start at
+    the same time]
+  ]
+]
+\end{forest}
+}
+
 
 \chapter{Evaluation}
 
@@ -2315,7 +2386,79 @@ developed an interface which allowed users to better track their workouts.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the appendices
 \appendix
-
+\chapter{}
+\section{Repository Overview}\label{app:repo_overview}
+\tiny
+\begin{forest}
+  for tree={
+    font=\ttfamily,
+    text width=\textwidth,
+    grow'=0,
+    child anchor=west,
+    parent anchor=south,
+    anchor=west,
+    calign=first,
+    edge path={
+      \noexpand\path [draw, \forestoption{edge}]
+      (!u.south west) +(7.5pt,0) |- node[fill,inner sep=1.25pt] {} (.child anchor)\forestoption{edge label};
+    },
+    before typesetting nodes={
+      if n=1
+        {insert before={[,phantom]}}
+        {}
+    },
+    fit=band,
+    before computing xy={l=15pt},
+  }
+[
+  [{\bf ppg-recorder/app/src} - Contains Android project designed for the
+	  watch
+	  [\emph{EarHRRecorder.kt} - Controls recording HR from bluetooth
+	  earbuds]
+	  [\emph{GattAttributes.kt} - Defines constants used in
+	  Bluetooth-LE]
+	  [\emph{HeartDeviceScanListener.kt} - Used to search for Bluetooth
+	  devices]
+	  [\emph{HeartDeviceService.kt} - The service which listens for
+	  updates from Bluetooth updates in the background]
+	  [\emph{MainActivity.kt} - Runs the main thread of the program]
+	  [\emph{PpgRecorder.kt} - Records data from the watch's PPG sensor]
+	  [\emph{SaveListener.kt} - Provides feedback once data is saved to
+	  filesystem]
+	  [\emph{SensorRecorder.kt} - Parent class for all sensor recorders]
+	  [\emph{Sync.kt} - Uploads recorded data to a server]
+  ]
+  [{\bf server} - A server to run on a raspberry pi and receive data
+	  [\emph{gdrive.py} - Uploads files to Google Drive]
+	  [\emph{server.py} - Server code built with Flask]
+  ]
+  [{\bf data} - Contains files to process the recordings in addition to the recorded data
+    [\emph{data.py} - Code used to represent signals] 
+    [\emph{earbuds.py} - Used to represent signals from the earbuds]
+    [\emph{ecgdata.py} - Used to represent signals from the ECG]
+    [{\bf evaluation} - Programs used to evaluate the project
+      [\emph{correlationtest.py} - Used to verify informed correlation results]
+      [\emph{earbud\_test.py} - Used to test sensor fusion techniques]
+      [\emph{filtertest.py} - Used to test filtering algorithms]
+      [\emph{josstest.py} - Used to test the JOSS-based algorithm]
+      [\emph{motionfiltertest.py} - Used to test LMS and NLMS]
+      [\emph{peakfindtest.py} - Used to test peakfinding code]
+      [\emph{syncstest.py} - Used to split data into segments based on speed]
+    ]
+    [\emph{filtering.py} - Runs a butterworth and chebyshev filter]
+    [\emph{heartrate.py} - Calculates heartrate when given the watch and ECG
+    data]
+    [\emph{joss.py} - Runs spectrum reconstruction on watch data]
+    [\emph{kalmanfilter.py} - Implementation of Kalman filter]
+    [\emph{MFOCUSS.m} - Implementation of MFOCUSS from \cite{ZhangCodes}]
+    [\emph{motionfilter.py} - Implementation of LMS and NLMS]
+    [\emph{peakfind.py} - Naive and sd-minimisation peakfinding functions]
+    [\emph{sync.py} - Code which combines watch and ECG data ensuring they start at
+    the same time]
+    [\emph{watchdata.py} - Code to extract watch data]
+  ]
+]
+\end{forest}
 %\chapter{Data tables}
 %\section{NLMS Absolute Errors} \label{section:nlms-errors}
 %
@@ -2325,7 +2468,7 @@ developed an interface which allowed users to better track their workouts.
 %
 %\csvautolongtable{figs/lms_validity.csv}
 
-\chapter{Project Proposal}
+\section{Project Proposal}
 
 \includepdf[pages=-,pagecommand={},width=\textwidth]{proposal.pdf}
 

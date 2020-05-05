@@ -50,22 +50,24 @@
 \contentsline {subsubsection}{Android Services}{33}{section*.37}
 \contentsline {subsection}{\numberline {3.6.2}Sensor Fusion}{34}{subsection.3.6.2}
 \contentsline {subsection}{\numberline {3.6.3}Kalman Filter}{34}{subsection.3.6.3}
-\contentsline {chapter}{\numberline {4}Evaluation}{36}{chapter.4}
-\contentsline {section}{\numberline {4.1}Gathering Data}{36}{section.4.1}
-\contentsline {subsection}{\numberline {4.1.1}Synchronising Signals}{36}{subsection.4.1.1}
-\contentsline {section}{\numberline {4.2}Filtering}{37}{section.4.2}
-\contentsline {subsection}{\numberline {4.2.1}Butterworth Filter}{38}{subsection.4.2.1}
-\contentsline {subsection}{\numberline {4.2.2}Chebyshev Type II Filter}{39}{subsection.4.2.2}
-\contentsline {section}{\numberline {4.3}Motion Artefact Reduction}{41}{section.4.3}
-\contentsline {subsection}{\numberline {4.3.1}LMS}{41}{subsection.4.3.1}
-\contentsline {subsection}{\numberline {4.3.2}NLMS}{43}{subsection.4.3.2}
-\contentsline {section}{\numberline {4.4}Heart Rate Calculation}{45}{section.4.4}
-\contentsline {section}{\numberline {4.5}Joint Sparse Spectrum Reconstruction}{47}{section.4.5}
-\contentsline {section}{\numberline {4.6}Earbuds}{49}{section.4.6}
-\contentsline {subsection}{\numberline {4.6.1}Problem}{49}{subsection.4.6.1}
-\contentsline {subsection}{\numberline {4.6.2}Sensor Fusion}{49}{subsection.4.6.2}
-\contentsline {chapter}{\numberline {5}Conclusion}{51}{chapter.5}
-\contentsline {paragraph}{Summary}{51}{section*.60}
-\contentsline {paragraph}{Issues}{51}{section*.61}
-\contentsline {chapter}{Bibliography}{51}{section*.61}
-\contentsline {chapter}{\numberline {A}Project Proposal}{54}{appendix.A}
+\contentsline {section}{\numberline {3.7}Repository Overview}{35}{section.3.7}
+\contentsline {chapter}{\numberline {4}Evaluation}{37}{chapter.4}
+\contentsline {section}{\numberline {4.1}Gathering Data}{37}{section.4.1}
+\contentsline {subsection}{\numberline {4.1.1}Synchronising Signals}{37}{subsection.4.1.1}
+\contentsline {section}{\numberline {4.2}Filtering}{38}{section.4.2}
+\contentsline {subsection}{\numberline {4.2.1}Butterworth Filter}{39}{subsection.4.2.1}
+\contentsline {subsection}{\numberline {4.2.2}Chebyshev Type II Filter}{40}{subsection.4.2.2}
+\contentsline {section}{\numberline {4.3}Motion Artefact Reduction}{42}{section.4.3}
+\contentsline {subsection}{\numberline {4.3.1}LMS}{42}{subsection.4.3.1}
+\contentsline {subsection}{\numberline {4.3.2}NLMS}{44}{subsection.4.3.2}
+\contentsline {section}{\numberline {4.4}Heart Rate Calculation}{46}{section.4.4}
+\contentsline {section}{\numberline {4.5}Joint Sparse Spectrum Reconstruction}{48}{section.4.5}
+\contentsline {section}{\numberline {4.6}Earbuds}{50}{section.4.6}
+\contentsline {subsection}{\numberline {4.6.1}Problem}{50}{subsection.4.6.1}
+\contentsline {subsection}{\numberline {4.6.2}Sensor Fusion}{50}{subsection.4.6.2}
+\contentsline {chapter}{\numberline {5}Conclusion}{52}{chapter.5}
+\contentsline {paragraph}{Summary}{52}{section*.60}
+\contentsline {paragraph}{Issues}{52}{section*.61}
+\contentsline {chapter}{Bibliography}{52}{section*.61}
+\contentsline {section}{\numberline {.1}Repository Overview}{55}{section.Alph0.1}
+\contentsline {section}{\numberline {.2}Project Proposal}{55}{section.Alph0.2}
