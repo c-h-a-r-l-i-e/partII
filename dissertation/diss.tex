@@ -188,9 +188,10 @@ In recent years, a new technology has emerged - Photoplethysmogram (PPG)
 - light is directed at the skin, and blood volume changes caused by the
 cardiac cycle are detected through the changes in the reflected light
 intensity. PPG sensors are cheaper than ECG sensors, and hence are 
-available in a variety of products, particularly smartwatches. This 
-innovation has bought a new wave of advanced training and monitoring onto
-the wrists of many runners.
+available in a variety of products, particularly smartwatches. Recently, some
+wireless earbuds have been released containing PPG sensors as well. These 
+innovations have bought a new wave of advanced training and monitoring into
+the lives of many runners.
 
 Switching from ECG to PPG is not without problems though - ECG sensors generally return a
 clean signal, as opposed to PPG signals which are contaminated with
@@ -205,6 +206,8 @@ MAs, and hence compensate for them.
 
 My goal is to research and develop a heart rate detection algorithm
 for smartwatches worn during running, and to demonstrate it is accurate.
+Additionally, I would like to explore the use of earbuds with PPG sensors as
+an alternative source of heart-rate. 
 
 
 
@@ -498,6 +501,14 @@ I chose to implement the project in several stages:
 
 \end{enumerate}
 
+
+
+
+\section{Starting Point}
+
+The codebase is built from scratch, as per my proposal. The joint sparse
+spectrum reconstruction method I implement is based on JOSS, as described in
+my implementation (section \ref{sec:joss}).
 
 \chapter{Implementation}
 
@@ -1994,19 +2005,21 @@ compare LMS and NLMS in terms of execution time and accuracy.
 
 \subsection{LMS}
 
-Before I begin testing, I must determine what accelerometer signals to use as
-the reference motion, as each signal is correlated in a different way to the
-motion noise present during a run. In
-other words, do I adaptively filter against acceleration from the x, y or z
-axis, or some combination of these axes. To test this, I ran the adaptive
-filters on all of the medium noise data I have, at various different step sizes
-and number of taps. For each tap number and step size, I try every possible
-combination of filtering using the x, y and z acceleration. 
+Before I begin testing, I must deduce which accelerometer signals (x/y/z) are
+most correlated with the motion noise present whilst running. To test this, I
+ran the adaptive filters on all of the
+medium-noise data I have, at a variety of different step sizes and number of
+taps. For each
+tap number and step size, I try every possible combination of filtering using
+the x, y and
+z acceleration, then the best combination should produce the least error. 
 
-I condensed the information from these tests, by averaging the ranking of
-the errors. If a particular combination of axis produced the best filtering,
-based on average absolute error 
-it is assigned number 1, the next best 2 and so on. Then, I take the average
+I condensed the information from these tests, by averaging the ranking of the
+errors.
+For each pair of step size and tap count, if a particular combination of axis
+produced the best filtering, based on average absolute
+error it is assigned rank 1, the next best rank 2 and so on. Then, I take the
+average 
 of this rank over each segment of data, which is shown in Table \ref{table:lms-errors}.
 
 \begin{table}[]
