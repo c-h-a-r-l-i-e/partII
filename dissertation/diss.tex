@@ -1,7 +1,7 @@
 % Template for a Computer Science Tripos Part II project dissertation
 \documentclass[12pt,a4paper,twoside,openany]{report}
 \usepackage[pdfborder={0 0 0}]{hyperref}    % turns references into hyperlinks
-\usepackage[margin=25mm]{geometry}  % adjusts page layout
+\usepackage[margin=20mm]{geometry}  % adjusts page layout
 \usepackage[dvipsnames]{xcolor}
 \usepackage{graphicx}  % allows inclusion of PDF, PNG and JPG images
 \usepackage{verbatim}
@@ -167,7 +167,6 @@ None.
 \listoffigures
 
 \newpage
-\section*{Acknowledgements}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -382,37 +381,37 @@ The windows of the signal overlap by 6 s, meaning that the heart-rate
 between two calculations will be very similar. Hence, TROIKA recommends
 selecting a peak in a small range around the last known heart-rate.
 
-\subsection{Finite State Machine}
-
-The issue with the TROIKA framework is that it is prone to repeating errors
-when they happen. For example, if the algorithm accidentally locks on to a frequency
-related to motion it is very difficult to recover. A technique
-suggested to avoid these errors makes use of finite state machines (FSM)
-\cite{Chung19}.
-
-This approach uses a FSM with four states as follows: 
-
-\begin{itemize}
-	\item Stable - the heart-rate estimate is likely to be very accurate.
-	\item Recovery - the heart-rate estimate is somewhat accurate.
-	\item Alert - the heart-rate estimate is possibly wrong.
-	\item Uncertain - the heart-rate estimate is probably wrong.
-\end{itemize}
-
-To transition between states we need some sort of measure which tells us how
-confident we are in the heart-rate estimation - in the FSM we use crest factor
-(CF). The CF is the ratio of the peak value to the root-mean-squared value.
-The lower the CF, the less likely the HR estimate is to be accurate. Hence,
-when the CF value falls below some threshold, we go into a state with less
-confidence in the heart-rate value. Additionally we are guided by heart-rate
-change - if the heart-rate remains constant that is a sign we are locked on
-the wrong signal.
-
-Now, we have a FSM which will describe our confidence in a heart-rate
-measurement - the question is how we use it. In the paper, an estimation is
-only valid if it was taken in the
-stable state. Hence, we sacrifice some of the data, but as a result we can be
-much more confident in the results we do get.
+%\subsection{Finite State Machine}
+%
+%The issue with the TROIKA framework is that it is prone to repeating errors
+%when they happen. For example, if the algorithm accidentally locks on to a frequency
+%related to motion it is very difficult to recover. A technique
+%suggested to avoid these errors makes use of finite state machines (FSM)
+%\cite{Chung19}.
+%
+%This approach uses a FSM with four states as follows: 
+%
+%\begin{itemize}
+%	\item Stable - the heart-rate estimate is likely to be very accurate.
+%	\item Recovery - the heart-rate estimate is somewhat accurate.
+%	\item Alert - the heart-rate estimate is possibly wrong.
+%	\item Uncertain - the heart-rate estimate is probably wrong.
+%\end{itemize}
+%
+%To transition between states we need some sort of measure which tells us how
+%confident we are in the heart-rate estimation - in the FSM we use crest factor
+%(CF). The CF is the ratio of the peak value to the root-mean-squared value.
+%The lower the CF, the less likely the HR estimate is to be accurate. Hence,
+%when the CF value falls below some threshold, we go into a state with less
+%confidence in the heart-rate value. Additionally we are guided by heart-rate
+%change - if the heart-rate remains constant that is a sign we are locked on
+%the wrong signal.
+%
+%Now, we have a FSM which will describe our confidence in a heart-rate
+%measurement - the question is how we use it. In the paper, an estimation is
+%only valid if it was taken in the
+%stable state. Hence, we sacrifice some of the data, but as a result we can be
+%much more confident in the results we do get.
 
 \subsection{JOSS} \label{joss-intro}
 
@@ -435,40 +434,40 @@ JOSS improves on TROIKA, providing a lower average absolute estimation error
 and additionally works better when the PPG is sampled at a lower rate.
 
 
-\subsection{PARHELIA}
-
-PARHELIA \cite{Fujita18} is a PARticle filter-based algorithm for HEart rate
-estimation using photopLethymographIc signAls. It consists of two stages:
-spectral analysis, and then particle filtering, which I will delve into now.
-
-The spectral analysis computes the spectrum of the PPG and each acceleration
-signal, by running FFT on each. 
-
-A particle filter can be used to represent uncertainty in a system, by having
-multiple particles representing estimates of the current state. Each particle
-is assigned a weight which represents our confidence in that particle being
-correct. In PARHELIA, there are five steps, as follows:
-\begin{enumerate}
-	\item Initialisation - generate particles uniformly in the range 60
-		bpm and 170 bpm.
-
-	\item Prediction - every iteration, particles are moved randomly based on a normal
-		distribution with standard deviation 6 bpm.
-
-	\item Weight calculation - the weight of a particle is increased if
-		its bpm is a peak in the PPG signal, and reduced if it's a
-		peak in the accelerometer data.
-
-	\item BPM Estimation - we estimate current BPM by looking at the
-		weighted average of particles.
-
-	\item Resampling - particles with the lowest weights are redistributed
-		to more likely states.
-\end{enumerate}
-
-This approach improved on JOSS, claiming to provide 8.6\% better estimation
-accuracy, and 20 times faster performance. However, it does require a higher
-sampling rate than JOSS.
+%\subsection{PARHELIA}
+%
+%PARHELIA \cite{Fujita18} is a PARticle filter-based algorithm for HEart rate
+%estimation using photopLethymographIc signAls. It consists of two stages:
+%spectral analysis, and then particle filtering, which I will delve into now.
+%
+%The spectral analysis computes the spectrum of the PPG and each acceleration
+%signal, by running FFT on each. 
+%
+%A particle filter can be used to represent uncertainty in a system, by having
+%multiple particles representing estimates of the current state. Each particle
+%is assigned a weight which represents our confidence in that particle being
+%correct. In PARHELIA, there are five steps, as follows:
+%\begin{enumerate}
+%	\item Initialisation - generate particles uniformly in the range 60
+%		bpm and 170 bpm.
+%
+%	\item Prediction - every iteration, particles are moved randomly based on a normal
+%		distribution with standard deviation 6 bpm.
+%
+%	\item Weight calculation - the weight of a particle is increased if
+%		its bpm is a peak in the PPG signal, and reduced if it's a
+%		peak in the accelerometer data.
+%
+%	\item BPM Estimation - we estimate current BPM by looking at the
+%		weighted average of particles.
+%
+%	\item Resampling - particles with the lowest weights are redistributed
+%		to more likely states.
+%\end{enumerate}
+%
+%This approach improved on JOSS, claiming to provide 8.6\% better estimation
+%accuracy, and 20 times faster performance. However, it does require a higher
+%sampling rate than JOSS.
 
 
 
@@ -749,8 +748,8 @@ Using these methods, I define three methods within \emph{gdrive.py}, as follows:
 		creating the necessary folders if they don't already exist,
 		then entering them.
 
-	\item \emph{uploadFile(filepath)} created the path up to the file
-		given by filepath, and then upload the file to the folder.
+	\item \emph{uploadFile(filepath)} creates the path up to the file
+		given by filepath, and then uploads the file to the folder.
 \end{itemize}
 
 Now, I have created a system which allows the user to upload recordings from
@@ -784,65 +783,48 @@ Once I have collected the PPG signal from the watch, and have recorded the ECG
 from the chest, I need a method to synchronise the signals, such that they
 start at the same time and we can compare them accurately.
 
-I set out to produce a solution with the following properties:
-\begin{itemize}
-	\item Able to synchronize signals with \(\pm0.3\)s accuracy. With a
-		heartbeat of 200 bpm this represents being within a heartbeat.
-		This is an acceptable level of delay, as heart rate is
-		averaged over several beats anyway.
-
-	\item Can synchronize signals given the two recordings are started
-		within two minutes of each other. This constraint is helpful
-		as it prevents wasted time searching through the signal.
-
-	\item Does not use the clocks built into the device. We must assume
-		the clock within the ECG is unreliable. Additionally, the two
-		devices may be synchronized to different time, and hence could
-		be out by any amount of time.
-\end{itemize}
+%I set out to produce a solution with the following properties:
+%\begin{itemize}
+%	\item Able to synchronize signals with \(\pm0.3\)s accuracy. With a
+%		heartbeat of 200 bpm this represents being within a heartbeat.
+%
+%	\item Can synchronize signals given the two recordings are started
+%		within two minutes of each other. 
+%\end{itemize}
 
 Given I know both devices have an accelerometer, I realised I could ask the
-wearer to move in some motion which is picked up by both devices. Then, I
+wearer to jump, which will be picked up by both devices. Then, I
 could compare the two accelerometer signals in order to discover the
-movement. Then comparing the starting times of the two signals would enable
-calculation of the time difference between them.
-
-The type of motion I chose was important, as it had to be easy to explain to
-the wearer, but also provide sufficient motion for it to be identifiable
-against normal motion. I decided jumping was appropriate -
-I would ask the wearer to hold the watch close to their chest and jump three
-to five times.
+jump.
 
 The cross correlation of two signals \(f\) and \(g\) is a measure of
 similarity as a function of the displacement between them. It is simple to
 calculate, as a sum of the products between the samples of \(f\) and of \(g\)
 displaced by \(n\).
 
-To synchronise the accelerometer, I developed the following three step 
-algorithm:
-\begin{enumerate}
-	\item Normalize signals, by moving to zero mean, 
+To synchronise the devices, I first
+normalize the signals, and move to zero mean. Then, I compute cross
+correlation in both directions - swapping $f$ and $g$ between the ECG and
+watch acceleration. Then I find the maximum across both of the calculations,
+which gives us the point at which the jumps align.
 
-	\item Crop PPG signals to two minutes, crop ECG signals to four
-		minutes, compute cross correlation with \(f=\) PPG
-		acceleration, \(g=\) ECG acceleration.
-
-	\item Compute the other way - crop ECG to two minutes, PPG to four
-		minutes, compute cross correlation with \(f=\) ECG
-		acceleration, \(g=\) PPG acceleration. I compute both ways, to
-		ensure that we can synchronise regardless of which device
-		started recording first.
-
-	\item Find the maximum cross correlation across each of the
-		calculations.
-
-
-
-
-
-
-
-\end{enumerate}
+%\begin{enumerate}
+%	\item Normalize signals, by moving to zero mean, 
+%
+%	\item Crop PPG signals to two minutes, crop ECG signals to four
+%		minutes, compute cross correlation with \(f=\) PPG
+%		acceleration, \(g=\) ECG acceleration.
+%
+%	\item Compute the other way - crop ECG to two minutes, PPG to four
+%		minutes, compute cross correlation with \(f=\) ECG
+%		acceleration, \(g=\) PPG acceleration. I compute both ways, to
+%		ensure that we can synchronise regardless of which device
+%		started recording first.
+%
+%	\item Find the maximum cross correlation across each of the
+%		calculations.
+%
+%\end{enumerate}
 
 \subsection{Informed Synchronisation}
 
@@ -860,8 +842,8 @@ However, in addition we can see that there is a significant rise in cross
 correlation around the peak, where we are seeing peaks due to one or two of
 the jumps aligning. This is useful as we do not need to scan at each
 possible time difference, instead we can do an initial, lower resolution scan.
-After this initial scan is done, we find the peak, and check each possible
-time difference around the lower resolution peak to find the actual peak.
+After this initial scan is done we check a range
+around the lower resolution peak to find the actual peak.
 
 \begin{figure}[h!]
 	\centerline{\includegraphics[width=0.8\textwidth]{figs/cross-correlation.png}}
@@ -876,36 +858,23 @@ algorithm takes. Correct range gives the range of the time period we want to
 scan once we have found an initial peak, in order to find the actual peak. The
 code is included here:
 \begin{lstlisting}[language=Python]
-def fast_correlate(f, g, freq, init_time_gap = 0.25, search_bound = 3):
+def fast_correlate(f, g, freq, init_time_gap = 0.25, correct_range = 3):
     """
     Calculate cross correlation c of two numpy arrays, as defined by 
-    c[k] = sum_n (f[n+k] * g[n]) using optimized method 
-    which does an initial correlation at a lower resolution and then 
-    hones in on the solution.
+    c[k] = sum_n (f[n+k] * g[n]).
 
     Parameters
     ----------
-    f, g : numpy arrays
-    Input signals, resampled to ensure they're at the same frequency.
-
-    freq : float
-        The frequency of the signals.
-
-    init_time_gap : float
-        Interval at which to perform correlation initally in seconds. 
-
-    search_bound : float
-        Bound within which we search for the solution once we have made an initial pass.
-        
+     - f, g : input signals, resampled to ensure they're at the same frequency.
+     - freq : frequency of the signals.
+     - init_time_gap : interval at which to perform correlation initally in seconds. 
+     - correct_range : bound within which we search for the solution once we have made 
+    		an initial pass.
 
     Returns
     -------
-    k : int
-        k is the time at which we think the signals are synced, given in terms of the number of samples through f we are.
-        i.e. the value of k which maximizes c[k]
-
-    v : float
-        the value of cross correlation at that point (c[k])
+     - k : time at which we think the signals are synced. 
+     - v : value of cross correlation at that point (c[k]).
     """
     if f.size < g.size:
         raise ValueError("Array f must be larger than g")
@@ -921,7 +890,7 @@ def fast_correlate(f, g, freq, init_time_gap = 0.25, search_bound = 3):
 
     # Find peak by searching around initial solution.
     max_pos = np.argmax(c)
-    bound = search_bound * freq
+    bound = correct_range * freq
     lower_bound = max(max_pos - bound, 0)
     upper_bound = min(max_pos + bound, length)
     for k in range(lower_bound, upper_bound, 1):
@@ -935,7 +904,7 @@ def fast_correlate(f, g, freq, init_time_gap = 0.25, search_bound = 3):
 \end{lstlisting}
 
 In Section \ref{sec:evaluate-sync} I found that a value of \(g=0.25\)s
-provides significantly better performance, but still finds the correct time
+provides significantly better performance, and still finds the correct time
 difference for all recorded data.
 
 Now, I have developed a system which allows me to record data from a run,
@@ -1060,7 +1029,7 @@ is equivalent to finding \(z=s\).
 
 There are multiple algorithms which exist in order to adaptively filter a
 signal. I'll look at two, first describing the least mean squares (LMS) algorithm from
-Widrow and Hoff. LMS first initializes all of the filter weights to 0. At each
+Widrow et al. \cite{WidrowLMS}. LMS first initializes all of the filter weights to 0. At each
 step, it finds the gradient of the mean square output \(E(z^2)\).
 Each weight's gradient describes what would happen to the signal if we kept
 using that weight value. So if the gradient of a weight is positive we know
@@ -1287,13 +1256,12 @@ def ssr(y, freq, N, eng):
         for n in range(0, N): 
             phi[m,n] = np.exp(complex_factor * m * n)
 
+    # Run the MFOCUSS algorithm
     Phi = matlab.double(phi.tolist(), is_complex=True)
     Y = matlab.double(y.tolist())
-
     X = eng.MFOCUSS(Phi, Y, 1e-10, 'MAX_ITERS', 4)
     x = np.array(X)
     x = np.abs(x) ** 2
-
 
     return x
 \end{lstlisting}
@@ -1323,7 +1291,7 @@ for i in range(0, bpm.size):
     accel_max[i] = np.max([spectra[i,1], spectra[i,2], spectra[i,3]])
     signal_ssr[i] = signal_ssr[i] - aggression * accel_max[i]
 
-# Set all SSR bins lower than the maximum divided by 5 to 0
+# Set all SSR bins lower than the maximum divided by 4 to 0
 max_bin = np.max(signal_ssr)
 signal_ssr[signal_ssr < max_bin / 4] = 0
 \end{lstlisting}
@@ -1351,7 +1319,9 @@ To avoid the heart-rate getting stuck at one value, a validation step is
 included. If the bpm reported is the same for more than 3 successive
 iterations, then
 validation is triggered. To validate, we return the closest peak to the latest
-recorded run, the code that finds this is below:
+recorded run.
+
+The code that implements this is given below:
 
 \begin{lstlisting}[language=Python]
 def joss_spt(spectrum, freq, prev_loc, prev_bpm, trap_count):
@@ -1407,7 +1377,7 @@ def joss_spt(spectrum, freq, prev_loc, prev_bpm, trap_count):
     # validate results
     if loc == prev_loc:
         trap_count += 1
-        if trap_count > 10:
+        if trap_count > 3:
             loc = discover_peak(spectrum, prev_loc)
             bpm = 60 * loc / N * freq
 
@@ -1416,30 +1386,30 @@ def joss_spt(spectrum, freq, prev_loc, prev_bpm, trap_count):
 
     return loc, bpm, trap_count
 
-
-def discover_peak(spectrum, prev_loc):
-    """
-    Find the closest peak in spectrum to the peak at prev_loc.
-    """
-    rng = np.arange(40, 220)
-    N = spectrum.shape[0]
-
-    # find peaks in range
-    mask = np.zeros((N,))
-    mask[rng] = 1
-    filtered = (spectrum * mask).flatten()
-    locs, _ = scipy.signal.find_peaks(filtered)
-
-    if locs.size == 0:
-        return prev_loc
-
-    # find closest peak to prev_loc
-    dist = np.abs(prev_loc - locs)
-    index = np.argmin(dist)
-    loc = locs[index]
-
-    return loc
 \end{lstlisting}
+
+%def discover_peak(spectrum, prev_loc):
+%    """
+%    Find the closest peak in spectrum to the peak at prev_loc.
+%    """
+%    rng = np.arange(40, 220)
+%    N = spectrum.shape[0]
+%
+%    # find peaks in range
+%    mask = np.zeros((N,))
+%    mask[rng] = 1
+%    filtered = (spectrum * mask).flatten()
+%    locs, _ = scipy.signal.find_peaks(filtered)
+%
+%    if locs.size == 0:
+%        return prev_loc
+%
+%    # find closest peak to prev_loc
+%    dist = np.abs(prev_loc - locs)
+%    index = np.argmin(dist)
+%    loc = locs[index]
+%
+%    return loc
 
 Now, we have developed another method to calculate heart-rate which
 removes MAs in the frequency domain and uses previous data to better calculate
@@ -1471,7 +1441,7 @@ the following details the process of collecting data from the earbuds.
 
 \subsection{Gathering data}
 
-To collect data, I connected the earbuds to the watch, and then data is
+Once the earbuds are connected to the watch, data is
 sent through the Bluetooth Light Energy (LE) protocol. There are a few key
 pieces of terminology, which I explain here:
 
@@ -1486,7 +1456,7 @@ server, in our case a smart watch.
 
 \paragraph{Characteristics} are single data points, for example in our case a
 heart-rate integer. Characteristics also have a number of descriptors
-describing the value.
+giving metadata.
 
 \paragraph{Services} are logical group of characteristics, for example the
 heart-rate service contains the heart-rate measurement characteristic along
@@ -1510,7 +1480,7 @@ characteristics are then periodically sent to the watch, where they are
 recorded.
 
 \begin{figure}[H]
-	\centerline{\includegraphics[width=0.7\textwidth]{figs/gatt-flow.png}}
+	\centerline{\includegraphics[width=0.65\textwidth]{figs/gatt-flow.png}}
 	\caption{Retrieving Data from Earbuds.}
 	\label{fig:gatt-flow}
 \end{figure}
@@ -1549,13 +1519,10 @@ the way Android allows different applications to communicate.
 We create a \emph{BroadcastReceiver}
 object in \emph{MainActivity}, which deals with intents we might receive from
 the service - the intents it may send include device connected/disconnected
-and an update to say the recordings have successfully been saved. 
+and an update to say the recordings have successfully been saved. The
+broadcast receiver is shown below:
 
 \begin{lstlisting}[language=Kotlin]
-// Handles various events fired by the Service.
-// ACTION_GATT_CONNECTED: connected to a GATT server.
-// ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
-// ACTION_SAVED: heart-rate data has been saved
 private val mGattUpdateReceiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action
@@ -1613,7 +1580,8 @@ Kalman gain is the parameter used to weight the measurements against the
 prediction. A higher gain assigns more trust to the measurements, meaning the
 filter will respond quicker, a low gain produces more smoothing.
 
-The code for my Kalman filter is as follows:
+The code for the predict and correct step is below, full code is listed in
+Appendix \ref{app:kalman_code}.
 
 
 \begin{lstlisting}[language=Python]
@@ -1641,30 +1609,32 @@ def correct(self, t, predicted_hr, predicted_var):
 
     return hr, var
 
-
-def filter(self):
-    hrs = np.zeros(self.size)
-
-    # Initial step, wait until we get some data from the ear sensor before starting the filter
-    t_min = 1
-    while self.ear[t_min] == 0:
-        t_min += 1
-
-    hr = self.ear[t_min]
-    var = self.ear_noise
-
-    # Run the Kalman filter
-    for t in range(t_min, self.size):
-        hr, var = self.predict(t, hr, var)
-
-        if self.ear[t] != 0:
-            hr, var = self.correct(t, hr, var)
-
-        hrs[t] = hr
-
-    return data.Signal(hrs, 1)
-
 \end{lstlisting}
+
+
+
+
+%def filter(self):
+%    hrs = np.zeros(self.size)
+%
+%    # Initial step, wait until we get some data from the ear sensor before starting the filter
+%    t_min = 1
+%    while self.ear[t_min] == 0:
+%        t_min += 1
+%
+%    hr = self.ear[t_min]
+%    var = self.ear_noise
+%
+%    # Run the Kalman filter
+%    for t in range(t_min, self.size):
+%        hr, var = self.predict(t, hr, var)
+%
+%        if self.ear[t] != 0:
+%            hr, var = self.correct(t, hr, var)
+%
+%        hrs[t] = hr
+%
+%    return data.Signal(hrs, 1)
 
 In this section I have developed an application which gets heart-rate data from
 earbuds, and have implemented a Kalman filter which allows us to fuse the data
@@ -1838,7 +1808,7 @@ and breathing.
 The results of adding this noise to a signal can be seen in figure
 \ref{fig:sim-beats-noise}.
 
-\begin{figure}
+\begin{figure}[H]
 	\centering
 	\begin{subfigure}[b]{0.4\textwidth}
 		\centerline{\includegraphics[width=\textwidth]{figs/sim-beat.png}}
@@ -1989,8 +1959,8 @@ data into twenty second segments of PPG data, labelled with the running speed. F
 testing motion artefact reduction, I only test data recorded while running at
 a speed greater than 3 km/h.
 
-Now, to test my motion filtering algorithm, for each PPG data segment, I run
-the algorithm on it. With the results, I calculate the heart-rate that my
+Now, to test my motion filtering algorithm, I run it on each PPG data segment. 
+With the results, I calculate the heart-rate that my
 heart-rate algorithm would compute. 
 I use my standard deviation minimisation algorithm from section \ref{sec:sd-min}
 and then compare this to the
@@ -2082,16 +2052,16 @@ solution, while larger step sizes likely miss the solution.
 
 To determine which axes to use, I run the same test as previously but using
 NLMS instead. The results are in Table \ref{table:nlms-errors}. Again,
-filtering using just the x-axis has a much lower average ordering than the
+filtering using just the x-axis has a much lower average ranking than the
 other techniques, so I will filter using just the x-axis from here on.
 
-\begin{table}[]
+\begin{table}[H]
 \centering
 \caption{Comparing NLMS Filtering with Different Axes.}
 \label{table:nlms-errors}
 \begin{tabular}{|l|l|l|l|}
 \hline
-X Filtering & Y Filtering & Z Filtering & Average Order \\ \hline
+X Filtering & Y Filtering & Z Filtering & Average Rank \\ \hline
 Y           & Y           & Y           & 4.68          \\
 Y           & Y           & N           & 4.83          \\
 Y           & N           & Y           & 2.95          \\
@@ -2399,8 +2369,7 @@ developed an interface which allowed users to better track their workouts.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the appendices
 \appendix
-\chapter{}
-\section{Repository Overview}\label{app:repo_overview}
+\chapter{Full Repository Overview}\label{app:repo_overview}
 \tiny
 \begin{forest}
   for tree={
@@ -2481,7 +2450,85 @@ developed an interface which allowed users to better track their workouts.
 %
 %\csvautolongtable{figs/lms_validity.csv}
 
-\section{Project Proposal}
+
+
+\chapter{Kalman Filter Implementation} \label{app:kalman_code}
+
+\begin{lstlisting}[language=Python]
+class Filter():
+    def __init__(self, ear, watch, predict_var=0.1, ear_noise=0.01):
+        """
+        Initiate class
+
+        Params
+        ---------
+         - ear : the hr signal recorded within the ear
+
+         - watch : the hr signal recorded on the wrist
+
+         - predict_var : the amount of additive variance to add for the prediction step
+
+         - ear_noise : the amount of additive variance to add for the ear correct step
+        """
+
+        self.ear = ear
+        self.watch = watch
+        self.predict_var = predict_var
+        self.size = min(ear.size, watch.size)
+        self.ear_noise = ear_noise
+
+
+    def predict(self, t, old_hr, old_var):
+        if t < 1:
+            raise ValueError("Predict step must start at time t > 0")
+
+        # calculate hr difference between t-1 and t on the watch
+        diff = self.watch[t] - self.watch[t-1]
+
+        hr = old_hr + diff
+        var = old_var + self.predict_var
+
+        return hr, var
+
+
+    def correct(self, t, predicted_hr, predicted_var):
+        # Calculate Kalman gain
+        k = predicted_var  / (predicted_var + self.ear_noise)
+
+        # Calculate new hr and variance
+        hr = predicted_hr + k * (self.ear[t] - predicted_hr)
+        var = (1 - k) * predicted_var
+
+        return hr, var
+
+
+    def filter(self):
+        hrs = np.zeros(self.size)
+
+        # Initial step, wait until we get some data from the ear sensor before starting the filter
+        t_min = 1
+        while self.ear[t_min] == 0:
+            t_min += 1
+
+        hr = self.ear[t_min]
+        var = self.ear_noise
+
+        # Run the Kalman filter
+        for t in range(t_min, self.size):
+            hr, var = self.predict(t, hr, var)
+
+            if self.ear[t] != 0:
+                hr, var = self.correct(t, hr, var)
+
+            hrs[t] = hr
+
+        return data.Signal(hrs, 1)
+
+\end{lstlisting}
+
+
+
+\chapter{Project Proposal}
 
 \includepdf[pages=-,pagecommand={},width=\textwidth]{proposal.pdf}
 
