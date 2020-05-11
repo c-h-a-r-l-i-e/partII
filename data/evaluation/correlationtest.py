@@ -1,4 +1,4 @@
-import testsyncs
+import syncstest
 import sys
 import os
 import timeit
@@ -13,7 +13,7 @@ GAP = 1
 
 
 def crosscorrelationTest():
-    syncs = testsyncs.getSyncs()
+    syncs = syncstest.getSyncs()
 
     totalError = 0
     
@@ -61,10 +61,10 @@ def fastCorrelate(f, g, freq):
     sync.fastCorrelate(f, g, freq, initTimeGap=GAP)
 
 def crosscorrelationTimeTest():
-    setup = """import testsyncs
+    setup = """import syncstest
 from __main__ import correlate
 from __main__ import fastCorrelate
-syncs = testsyncs.getSyncs()
+syncs = syncstest.getSyncs()
 s = syncs[0]
 freq = s.getECG_freq()
 f = s._getWatchAccelUp()

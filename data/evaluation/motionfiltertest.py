@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import sys
 import os
 import timeit
-import testsyncs
+import syncstest
 import heartpy as hp
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -17,7 +17,7 @@ import csv
 
 def write_validity_table(filename, nlms=True):
     segmentsize = 10
-    ppgs, ecgs, accxs, accys, acczs = testsyncs.getSegmentsAtNoise(testsyncs.NOISE_MEDIUM, segmentsize)
+    ppgs, ecgs, accxs, accys, acczs = syncstest.getSegmentsAtNoise(syncstest.NOISE_MEDIUM, segmentsize)
     with open(filename, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
 
@@ -98,9 +98,9 @@ def write_validity_table(filename, nlms=True):
 
 
 
-def test_validity(ax1, ax2, step, nlms=True, filterx=True, filtery=False, filterz=False, taps=20, noise=testsyncs.NOISE_MEDIUM):
+def test_validity(ax1, ax2, step, nlms=True, filterx=True, filtery=False, filterz=False, taps=20, noise=syncstest.NOISE_MEDIUM):
     segmentsize = 20
-    ppgs, ecgs, accxs, accys, acczs = testsyncs.getSegmentsAtNoise(noise, segmentsize)
+    ppgs, ecgs, accxs, accys, acczs = syncstest.getSegmentsAtNoise(noise, segmentsize)
 
     average_error = 0
     errors = np.zeros(len(ppgs))
@@ -155,8 +155,8 @@ def test_validity(ax1, ax2, step, nlms=True, filterx=True, filtery=False, filter
 
 
 def test_time_motion_filter(nlms):
-    setup = """import testsyncs
-ppgs, ecgs, accxs, accys, acczs = testsyncs.getSegmentsAtNoise(testsyncs.NOISE_MEDIUM, 30)
+    setup = """import syncstest
+ppgs, ecgs, accxs, accys, acczs = syncstest.getSegmentsAtNoise(syncstest.NOISE_MEDIUM, 30)
 ppg, acc = ppgs[0], accxs[0]
 
 import os
@@ -210,20 +210,20 @@ if __name__ == "__main__":
 
 
     #write_validity_table("lms_validity.csv", nlms=False)
-    plot_adaptive_validity(None, testsyncs.NOISE_MEDIUM)
+    plot_adaptive_validity(None, syncstest.NOISE_MEDIUM)
     plt.show()
     
     plt.figure("nlms, medium")
-    plot_adaptive_validity(True, testsyncs.NOISE_MEDIUM)
+    plot_adaptive_validity(True, syncstest.NOISE_MEDIUM)
 
     # plt.figure("nlms, high")
-    # plot_adaptive_validity(True, testsyncs.NOISE_HIGH)
+    # plot_adaptive_validity(True, syncstest.NOISE_HIGH)
 
     plt.figure("lms, medium")
-    plot_adaptive_validity(False, testsyncs.NOISE_MEDIUM)
+    plot_adaptive_validity(False, syncstest.NOISE_MEDIUM)
 
     # plt.figure("lms, high")
-    # plot_adaptive_validity(False, testsyncs.NOISE_HIGH)
+    # plot_adaptive_validity(False, syncstest.NOISE_HIGH)
 
     plt.show()
 

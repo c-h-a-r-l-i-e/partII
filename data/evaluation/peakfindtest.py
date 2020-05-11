@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import sys
 import os
 import timeit
-import testsyncs
+import syncstest
 import heartpy as hp
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -15,12 +15,12 @@ import peakfind
 import csv
 
 
-def test_validity(ax1, ax2, method, label, step=0.1, nlms=True, filterx=False, filtery=False, filterz=False, taps=20, noise=testsyncs.NOISE_LOW):
+def test_validity(ax1, ax2, method, label, step=0.1, nlms=True, filterx=False, filtery=False, filterz=False, taps=20, noise=syncstest.NOISE_LOW):
     """
     Method is one of 'sd' or 'naive'.
     """
     segmentsize = 20
-    ppgs, ecgs, accxs, accys, acczs = testsyncs.getSegmentsAtNoise(noise, segmentsize)
+    ppgs, ecgs, accxs, accys, acczs = syncstest.getSegmentsAtNoise(noise, segmentsize)
 
     average_error = 0
     errors = np.zeros(len(ppgs))
@@ -74,8 +74,8 @@ def test_validity(ax1, ax2, method, label, step=0.1, nlms=True, filterx=False, f
 
 
 def test_time(method):
-    setup = """import testsyncs
-syncs = testsyncs.getSyncs()
+    setup = """import syncstest
+syncs = syncstest.getSyncs()
 import os
 s = syncs[0]
 ecg, ppg = s.getSyncedSignals()

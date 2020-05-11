@@ -140,7 +140,7 @@ def get_rate_naive(signal):
 def plot_peaks_min_sd(signal): 
     peaks = find_peaks_min_sd(signal)
     signal.plot("signal")
-    plot_peaks(peaks, signal)
+    plot_peaks(peaks, signal, "Min-SD peaks")
     plt.show()
 
 

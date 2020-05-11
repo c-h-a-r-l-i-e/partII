@@ -441,10 +441,10 @@ def plotSyncedAccelerometer(data):
     else:
         watch = watch[-delta:]
 
-    xs = np.arange(0,watch.size/data.getFrequency(),1/data.getFrequency())[:watch.size]
-    plt.plot(xs, watch, label="Watch")
     xs = np.arange(0,ecg.size/data.getFrequency(),1/data.getFrequency())[:ecg.size]
-    plt.plot(xs, ecg, label="ECG", color='orange')
+    plt.plot(xs, ecg, label="ECG", color='blue')
+    xs = np.arange(0,watch.size/data.getFrequency(),1/data.getFrequency())[:watch.size]
+    plt.plot(xs, watch, label="Watch", color="orange")
     plt.xlabel("Time (s)")
     plt.ylabel("Acceleration")
     plt.title("Acceleration after syncing")
@@ -454,10 +454,10 @@ def plotAccelerometer(data):
     watch = data._getWatchAccelUp()
     ecg = -data._getECGAccelUp()
 
-    xs = np.arange(0,watch.size/data.getFrequency(),1/data.getFrequency())[:watch.size]
-    plt.plot(xs, watch, label="Watch", color="orange")
     xs = np.arange(0,ecg.size/data.getFrequency(),1/data.getFrequency())[:ecg.size]
     plt.plot(xs, ecg, label="ECG", color='blue')
+    xs = np.arange(0,watch.size/data.getFrequency(),1/data.getFrequency())[:watch.size]
+    plt.plot(xs, watch, label="Watch", color="orange")
     plt.xlabel("Time (s)")
     plt.ylabel("Acceleration")
     plt.title("Acceleration before syncing")

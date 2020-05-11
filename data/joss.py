@@ -8,7 +8,7 @@ from sync import Sync
 import heartpy as hp
 import matlab.engine
 
-DEBUG = False
+DEBUG = True
 
 def get_ecg_bpm(ecg, start, window_size = 8, shift=2):
     freq = ecg.frequency
@@ -76,6 +76,7 @@ def joss(sync, freq = 20, window_size = 8, shift = 4, errors=False):
             print("ECG bpm = {}".format(ecg_bpm))
             plt.subplot(224)
             plt.plot(spectrum)
+            plt.title("PPG")
             plt.gca().axvline(x=ecg_bpm, color='r')
             plt.show()
 

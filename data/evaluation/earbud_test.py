@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import sys
 import os
 import timeit
-import testsyncs
+import syncstest
 import heartpy as hp
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -120,8 +120,8 @@ def test_kalman(ax1, ax2):
 
 
 def test_time_motion_filter(nlms):
-    setup = """import testsyncs
-ppgs, ecgs, accxs, accys, acczs = testsyncs.getSegmentsAtNoise(testsyncs.NOISE_MEDIUM, 30)
+    setup = """import syncstest
+ppgs, ecgs, accxs, accys, acczs = syncstest.getSegmentsAtNoise(syncstest.NOISE_MEDIUM, 30)
 ppg, acc = ppgs[0], accxs[0]
 
 import os

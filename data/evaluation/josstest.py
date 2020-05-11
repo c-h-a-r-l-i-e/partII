@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import sys
 import os
 import timeit
-import testsyncs
+import syncstest
 import heartpy as hp
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -17,9 +17,9 @@ import joss
 
 
 def test_nlms_validity(ax1, ax2, step=1, nlms=True, 
-        filterx=True, filtery=False, filterz=False, taps=15, noise=testsyncs.NOISE_MEDIUM):
+        filterx=True, filtery=False, filterz=False, taps=15, noise=syncstest.NOISE_MEDIUM):
     segmentsize = 20
-    ppgs, ecgs, accxs, accys, acczs = testsyncs.getSegmentsAtNoise(noise, segmentsize)
+    ppgs, ecgs, accxs, accys, acczs = syncstest.getSegmentsAtNoise(noise, segmentsize)
 
     average_error = 0
     errors = np.zeros(len(ppgs))
@@ -73,7 +73,7 @@ def test_nlms_validity(ax1, ax2, step=1, nlms=True,
     ax2.plot(xs, ys, label=label)
 
 def test_joss_validity(ax1, ax2, noise):
-    syncs = testsyncs.getSyncsAtNoise(noise)
+    syncs = syncstest.getSyncsAtNoise(noise)
     errors = []
 
     for sync in syncs:
@@ -96,8 +96,8 @@ def test_joss_validity(ax1, ax2, noise):
 
 
 def test_time_motion_filter(nlms):
-    setup = """import testsyncs
-ppgs, ecgs, accxs, accys, acczs = testsyncs.getSegmentsAtNoise(testsyncs.NOISE_MEDIUM, 30)
+    setup = """import syncstest
+ppgs, ecgs, accxs, accys, acczs = syncstest.getSegmentsAtNoise(syncstest.NOISE_MEDIUM, 30)
 ppg, acc = ppgs[0], accxs[0]
 
 import os
@@ -146,6 +146,6 @@ def plot_joss_nlms(nlms, noise):
     ax2.set_xlim(0,200)
 
 if __name__ == "__main__":
-    plot_joss_nlms(True, testsyncs.NOISE_MEDIUM)
+    plot_joss_nlms(True, syncstest.NOISE_MEDIUM)
     plt.show()
 

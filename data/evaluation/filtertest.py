@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import sys
 import os
 import timeit
-import testsyncs
+import syncstest
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
@@ -167,8 +167,8 @@ def sim_heartbeat_noisy(freq, size, heart_rate):
     return (hb, hb_noisy)
 
 def test_time_butter(order):
-    setup = """import testsyncs
-syncs = testsyncs.getSyncs()
+    setup = """import syncstest
+syncs = syncstest.getSyncs()
 import os
 s = syncs[0]
 ecg, ppg = s.getSyncedSignals()
@@ -181,8 +181,8 @@ order = {}""".format(order)
     print("time at order {}, is {}".format(order, time))
 
 def test_time_cheby(order):
-    setup = """import testsyncs
-syncs = testsyncs.getSyncs()
+    setup = """import syncstest
+syncs = syncstest.getSyncs()
 import os
 s = syncs[0]
 ecg, ppg = s.getSyncedSignals()
