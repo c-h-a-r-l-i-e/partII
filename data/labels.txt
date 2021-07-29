@@ -1,7 +1,0 @@
-6 km/h : recording_2019-11-06T10:58:23/
-
-10 km/h : recording_2019-11-06T11:03:53.081/
-
-12 km/h : recording_2019-11-06T11:09:28.241/
-
-hand steady : recording_2019-11-07T14:30:12.018/
